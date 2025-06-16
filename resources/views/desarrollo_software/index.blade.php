@@ -2,8 +2,8 @@
 @section('content')
     <h2>Proyectos de Desarrollo de Software</h2>
     <a href="{{ route('desarrollo_software.create') }}" class="btn btn-primary mb-2">Nuevo proyecto</a>
-    <a href="{{ route('desarrollo_software.exportExcel') }}" class="btn btn-outline-success mb-2">Exportar Excel</a>
-    <a href="{{ route('desarrollo_software.exportPDF') }}" class="btn btn-outline-danger mb-2">Exportar PDF</a>
+    <a href="{{ route('desarrollo_software.export.excel') }}" class="btn btn-outline-success mb-2">Exportar Excel</a>
+    <a href="{{ route('desarrollo_software.export.pdf') }}" class="btn btn-outline-danger mb-2">Exportar PDF</a>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif

@@ -2,8 +2,8 @@
 @section('content')
     <h2>Control de Vehículos</h2>
     <a href="{{ route('vehiculos.create') }}" class="btn btn-primary mb-3">Nuevo vehículo</a>
-    <a href="{{ route('vehiculos.exportExcel') }}" class="btn btn-outline-success mb-3">Exportar Excel</a>
-    <a href="{{ route('vehiculos.exportPDF') }}" class="btn btn-outline-danger mb-3">Exportar PDF</a>
+    <a href="{{ route('vehiculos.export.excel') }}" class="btn btn-outline-success mb-3">Exportar Excel</a>
+    <a href="{{ route('vehiculos.export.pdf') }}" class="btn btn-outline-danger mb-3">Exportar PDF</a>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
