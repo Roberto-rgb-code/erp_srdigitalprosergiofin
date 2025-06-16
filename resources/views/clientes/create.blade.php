@@ -1,0 +1,10 @@
+@extends('layouts.app')
+@section('content')
+    <h2>Nuevo Cliente</h2>
+    <form method="POST" action="{{ route('clientes.store') }}">
+        @csrf
+        @include('clientes.partials.form')
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a href="{{ route('clientes.index') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+@endsection
