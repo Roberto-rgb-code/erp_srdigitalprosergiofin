@@ -11,20 +11,30 @@ use PDF;
 class ClienteController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Cliente::query();
-        if ($request->filled('nombre')) {
-            $query->where('nombre', 'ILIKE', "%{$request->nombre}%");
-        }
-        if ($request->filled('rfc')) {
-            $query->where('rfc', 'ILIKE', "%{$request->rfc}%");
-        }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        $clientes = $query->orderBy('id', 'desc')->paginate(15);
-        return view('clientes.index', compact('clientes'));
+{
+    $query = Cliente::query();
+    if ($request->filled('nombre')) {
+        $query->where('nombre', 'ILIKE', "%{$request->nombre}%");
     }
+    if ($request->filled('rfc')) {
+        $query->where('rfc', 'ILIKE', "%{$request->rfc}%");
+    }
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    $clientes = $query->orderBy('id', 'desc')->paginate(15);
+
+    // --- DATOS PARA GRÁFICOS ---
+    $allClientes = Cliente::all();
+    $conteoStatus = $allClientes->groupBy('status')->map->count();
+    $conteoTipo   = $allClientes->groupBy('tipo_cliente')->map->count();
+    $creditoTotal = $allClientes->sum('limite_credito');
+    $saldoTotal   = $allClientes->sum('saldo');
+
+    return view('clientes.index', compact('clientes', 'conteoStatus', 'conteoTipo', 'creditoTotal', 'saldoTotal'));
+}
+
 
     public function create()
     {
@@ -80,10 +90,17 @@ class ClienteController extends Controller
     }
 
     public function destroy(Cliente $cliente)
-    {
-        $cliente->delete();
-        return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente');
+{
+    // Verifica si hay talleres relacionados
+    if ($cliente->taller()->count() > 0) {
+        return redirect()->route('clientes.index')
+            ->with('error', 'No se puede eliminar el cliente porque tiene talleres relacionados.');
     }
+
+    $cliente->delete();
+    return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente');
+}
+
 
     public function exportExcel(Request $request)
 {

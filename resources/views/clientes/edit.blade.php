@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
     <h2>Editar Cliente</h2>
-    <form method="POST" action="{{ route('clientes.update', $cliente) }}">
+    <form method="POST" action="{{ route('clientes.update', $cliente) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         @include('clientes.partials.form')

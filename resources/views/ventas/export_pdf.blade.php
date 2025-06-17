@@ -2,33 +2,37 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ventas PDF</title>
+    <title>Reporte de Ventas</title>
     <style>
-        table { border-collapse: collapse; width: 100%; font-size: 12px;}
-        th, td { border: 1px solid #555; padding: 5px; }
-        th { background: #eaeaea; }
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px;}
+        th, td { border: 1px solid #ccc; padding: 6px 8px;}
+        th { background: #e6e6e6; }
     </style>
 </head>
 <body>
-    <h2>Ventas</h2>
+    <h2>Reporte de Ventas</h2>
     <table>
         <thead>
             <tr>
-                <th>ID</th><th>Cliente</th><th>Fecha</th>
-                <th>Monto Total</th><th>Estatus</th><th>Tipo</th><th>Comentarios</th>
+                <th>Folio</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Monto Total</th>
+                <th>Estatus</th>
+                <th>Tipo</th>
             </tr>
         </thead>
         <tbody>
             @foreach($ventas as $v)
-                <tr>
-                    <td>{{ $v->id }}</td>
-                    <td>{{ $v->cliente->nombre ?? '' }}</td>
-                    <td>{{ $v->fecha_venta }}</td>
-                    <td>${{ number_format($v->monto_total,2) }}</td>
-                    <td>{{ $v->estatus }}</td>
-                    <td>{{ $v->tipo_venta }}</td>
-                    <td>{{ $v->comentarios }}</td>
-                </tr>
+            <tr>
+                <td>{{ $v->folio }}</td>
+                <td>{{ $v->cliente->nombre ?? '-' }}</td>
+                <td>{{ $v->fecha_venta }}</td>
+                <td>${{ number_format($v->monto_total,2) }}</td>
+                <td>{{ $v->estatus }}</td>
+                <td>{{ $v->tipo_venta }}</td>
+            </tr>
             @endforeach
         </tbody>
     </table>

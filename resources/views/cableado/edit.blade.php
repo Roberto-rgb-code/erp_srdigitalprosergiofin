@@ -19,12 +19,7 @@
         </div>
         <div class="mb-3">
             <label>Tipo de instalación</label>
-            <select name="tipo_instalacion" class="form-select" required>
-                <option value="">Seleccione...</option>
-                @foreach($tipos as $tipo)
-                    <option value="{{ $tipo->nombre }}" @selected(old('tipo_instalacion', $cableado->tipo_instalacion) == $tipo->nombre)>{{ $tipo->nombre }}</option>
-                @endforeach
-            </select>
+            <input type="text" name="tipo_instalacion" class="form-control" value="{{ old('tipo_instalacion', $cableado->tipo_instalacion) }}" required>
         </div>
         <div class="mb-3">
             <label>Dirección del proyecto</label>
@@ -44,12 +39,7 @@
         </div>
         <div class="mb-3">
             <label>Responsable del proyecto</label>
-            <select name="responsable_id" class="form-select" required>
-                <option value="">Seleccione...</option>
-                @foreach($responsables as $r)
-                    <option value="{{ $r->id }}" @selected(old('responsable_id', $cableado->responsable_id) == $r->id)>{{ $r->nombre }}</option>
-                @endforeach
-            </select>
+            <input type="text" name="responsable" class="form-control" value="{{ old('responsable', $cableado->responsable) }}" required>
         </div>
         <div class="mb-3">
             <label>Costo estimado</label>
@@ -72,7 +62,7 @@
             <label>Comentarios</label>
             <textarea name="comentarios" class="form-control">{{ old('comentarios', $cableado->comentarios) }}</textarea>
         </div>
-        <button type="submit" class="btn btn-success">Actualizar</button>
+        <button type="submit" class="btn btn-primary">Actualizar</button>
         <a href="{{ route('cableado.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 @endsection

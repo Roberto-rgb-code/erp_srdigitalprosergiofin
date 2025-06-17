@@ -4,61 +4,51 @@ namespace App\Http\Controllers;
 
 use App\Models\Cableado;
 use App\Models\Cliente;
-use App\Models\Empleado;
-use App\Models\TipoProyecto;
 use Illuminate\Http\Request;
 use App\Exports\CableadoExport;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 
-
 class CableadoController extends Controller
 {
     public function index(Request $request)
-{
-    $query = \App\Models\Cableado::with(['cliente', 'responsable']);
+    {
+        $query = Cableado::with('cliente');
 
-    if ($request->filled('nombre_proyecto')) {
-        $query->where('nombre_proyecto', 'ilike', '%' . $request->nombre_proyecto . '%');
-    }
-    if ($request->filled('cliente_id')) {
-        $query->where('cliente_id', $request->cliente_id);
-    }
-    if ($request->filled('tipo_instalacion')) {
-        $query->where('tipo_instalacion', $request->tipo_instalacion);
-    }
-    if ($request->filled('responsable_id')) {
-        $query->where('responsable_id', $request->responsable_id);
-    }
-    if ($request->filled('estatus')) {
-        $query->where('estatus', $request->estatus);
-    }
-    // Filtro por rango de fechas (fecha_inicio)
-    if ($request->filled('fecha_inicio_de') && $request->filled('fecha_inicio_hasta')) {
-        $query->whereBetween('fecha_inicio', [$request->fecha_inicio_de, $request->fecha_inicio_hasta]);
-    } elseif ($request->filled('fecha_inicio_de')) {
-        $query->where('fecha_inicio', '>=', $request->fecha_inicio_de);
-    } elseif ($request->filled('fecha_inicio_hasta')) {
-        $query->where('fecha_inicio', '<=', $request->fecha_inicio_hasta);
-    }
+        if ($request->filled('nombre_proyecto')) {
+            $query->where('nombre_proyecto', 'ilike', '%' . $request->nombre_proyecto . '%');
+        }
+        if ($request->filled('cliente_id')) {
+            $query->where('cliente_id', $request->cliente_id);
+        }
+        if ($request->filled('tipo_instalacion')) {
+            $query->where('tipo_instalacion', $request->tipo_instalacion);
+        }
+        if ($request->filled('responsable')) {
+            $query->where('responsable', 'ilike', '%' . $request->responsable . '%');
+        }
+        if ($request->filled('estatus')) {
+            $query->where('estatus', $request->estatus);
+        }
+        if ($request->filled('fecha_inicio_de') && $request->filled('fecha_inicio_hasta')) {
+            $query->whereBetween('fecha_inicio', [$request->fecha_inicio_de, $request->fecha_inicio_hasta]);
+        } elseif ($request->filled('fecha_inicio_de')) {
+            $query->where('fecha_inicio', '>=', $request->fecha_inicio_de);
+        } elseif ($request->filled('fecha_inicio_hasta')) {
+            $query->where('fecha_inicio', '<=', $request->fecha_inicio_hasta);
+        }
 
-    $cableados = $query->orderByDesc('id')->paginate(15);
+        $cableados = $query->orderByDesc('id')->paginate(15);
 
-    $clientes = \App\Models\Cliente::orderBy('nombre')->get();
-    $responsables = \App\Models\Empleado::orderBy('nombre')->get();
-    $tipos = \App\Models\TipoProyecto::orderBy('nombre')->get();
+        $clientes = Cliente::orderBy('nombre')->get();
 
-    return view('cableado.index', compact('cableados', 'clientes', 'responsables', 'tipos'));
-}
-
-
+        return view('cableado.index', compact('cableados', 'clientes'));
+    }
 
     public function create()
     {
         $clientes = Cliente::orderBy('nombre')->get();
-        $responsables = Empleado::orderBy('nombre')->get();
-        $tipos = TipoProyecto::orderBy('nombre')->get();
-        return view('cableado.create', compact('clientes', 'responsables', 'tipos'));
+        return view('cableado.create', compact('clientes'));
     }
 
     public function store(Request $request)
@@ -71,7 +61,7 @@ class CableadoController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'nullable|date',
-            'responsable_id' => 'required|integer|exists:empleados,id',
+            'responsable' => 'required|string|max:100',
             'costo_estimado' => 'nullable|numeric',
             'costo_real' => 'nullable|numeric',
             'estatus' => 'required|string|max:50',
@@ -83,16 +73,14 @@ class CableadoController extends Controller
 
     public function show(Cableado $cableado)
     {
-        $cableado->load(['cliente', 'responsable', 'inventario', 'reportes']);
+        $cableado->load('cliente');
         return view('cableado.show', compact('cableado'));
     }
 
     public function edit(Cableado $cableado)
     {
         $clientes = Cliente::orderBy('nombre')->get();
-        $responsables = Empleado::orderBy('nombre')->get();
-        $tipos = TipoProyecto::orderBy('nombre')->get();
-        return view('cableado.edit', compact('cableado', 'clientes', 'responsables', 'tipos'));
+        return view('cableado.edit', compact('cableado', 'clientes'));
     }
 
     public function update(Request $request, Cableado $cableado)
@@ -105,7 +93,7 @@ class CableadoController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'nullable|date',
-            'responsable_id' => 'required|integer|exists:empleados,id',
+            'responsable' => 'required|string|max:100',
             'costo_estimado' => 'nullable|numeric',
             'costo_real' => 'nullable|numeric',
             'estatus' => 'required|string|max:50',
@@ -122,15 +110,14 @@ class CableadoController extends Controller
     }
 
     public function exportExcel()
-{
-    return Excel::download(new CableadoExport, 'proyectos_cableado.xlsx');
-}
+    {
+        return Excel::download(new CableadoExport, 'proyectos_cableado.xlsx');
+    }
 
-public function exportPDF()
-{
-    $cableados = \App\Models\Cableado::with(['cliente','responsable'])->get();
-    $pdf = PDF::loadView('cableado.export_pdf', compact('cableados'));
-    return $pdf->download('proyectos_cableado.pdf');
-}
-
+    public function exportPDF()
+    {
+        $cableados = Cableado::with('cliente')->get();
+        $pdf = PDF::loadView('cableado.export_pdf', compact('cableados'));
+        return $pdf->download('proyectos_cableado.pdf');
+    }
 }

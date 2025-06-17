@@ -10,7 +10,7 @@ class CableadoExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        return Cableado::with(['cliente', 'responsable'])->get()->map(function($c){
+        return Cableado::with('cliente')->get()->map(function($c){
             return [
                 'ID'               => $c->id,
                 'Proyecto'         => $c->nombre_proyecto,
@@ -19,7 +19,7 @@ class CableadoExport implements FromCollection, WithHeadings
                 'Dirección'        => $c->direccion,
                 'Inicio'           => $c->fecha_inicio,
                 'Fin'              => $c->fecha_fin,
-                'Responsable'      => $c->responsable->nombre ?? '',
+                'Responsable'      => $c->responsable, // ahora solo el campo de texto
                 'Estado'           => $c->estatus,
                 'Costo estimado'   => $c->costo_estimado,
                 'Costo real'       => $c->costo_real,
@@ -31,8 +31,18 @@ class CableadoExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'ID','Proyecto','Cliente','Tipo instalación','Dirección','Inicio','Fin',
-            'Responsable','Estado','Costo estimado','Costo real','Comentarios'
+            'ID',
+            'Proyecto',
+            'Cliente',
+            'Tipo instalación',
+            'Dirección',
+            'Inicio',
+            'Fin',
+            'Responsable',
+            'Estado',
+            'Costo estimado',
+            'Costo real',
+            'Comentarios'
         ];
     }
 }

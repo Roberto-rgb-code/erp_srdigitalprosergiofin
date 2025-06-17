@@ -16,7 +16,7 @@ class Cableado extends Model
         'descripcion',
         'fecha_inicio',
         'fecha_fin',
-        'responsable_id',
+        'responsable',     // <--- Texto
         'costo_estimado',
         'costo_real',
         'estatus',
@@ -25,17 +25,7 @@ class Cableado extends Model
 
     public $timestamps = false;
 
-    // Relaciones
     public function cliente() {
         return $this->belongsTo(Cliente::class, 'cliente_id');
-    }
-    public function responsable() {
-        return $this->belongsTo(Empleado::class, 'responsable_id');
-    }
-    public function inventario() {
-        return $this->hasMany(InventarioProyecto::class, 'cableado_id');
-    }
-    public function reportes() {
-        return $this->hasMany(ReporteActividad::class, 'cableado_id');
     }
 }
