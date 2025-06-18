@@ -1,14 +1,18 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
 class DocumentoEmpleado extends Model
 {
     protected $table = 'documentos_empleado';
+
     protected $fillable = [
-        'empleado_id', 'nombre', 'archivo'
+        'empleado_id',
+        'nombre_documento',
+        'archivo',
     ];
-    public $timestamps = false;
 
     public function empleado()
     {

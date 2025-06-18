@@ -16,14 +16,32 @@ class DesarrolloSoftwareController extends Controller
     public function index()
     {
         $proyectos = DesarrolloSoftware::with(['cliente', 'tipoSoftware', 'responsable'])->paginate(10);
-        return view('desarrollo_software.index', compact('proyectos'));
+
+        // Conteo por estado para gráfico
+        $graficoEstados = DesarrolloSoftware::select('estado')
+            ->selectRaw('count(*) as total')
+            ->groupBy('estado')
+            ->pluck('total','estado')
+            ->toArray();
+
+        // Estadísticas para dashboard (extra UX/UI)
+        $totalProyectos = DesarrolloSoftware::count();
+        $proyectosFinalizados = DesarrolloSoftware::where('estado', 'Finalizado')->count();
+        $proyectosEnDesarrollo = DesarrolloSoftware::where('estado', 'En desarrollo')->count();
+        $proyectosTesting = DesarrolloSoftware::where('estado', 'Testing')->count();
+        $proyectosPlaneados = DesarrolloSoftware::where('estado', 'Planeado')->count();
+
+        return view('desarrollo_software.index', compact(
+            'proyectos', 'graficoEstados',
+            'totalProyectos', 'proyectosFinalizados', 'proyectosEnDesarrollo', 'proyectosTesting', 'proyectosPlaneados'
+        ));
     }
 
     public function create()
     {
-        $clientes = Cliente::all();
-        $tipos = TipoSoftware::all();
-        $responsables = Empleado::all();
+        $clientes = Cliente::orderBy('nombre')->get();
+        $tipos = TipoSoftware::orderBy('nombre')->get();
+        $responsables = Empleado::orderBy('nombre')->get();
         return view('desarrollo_software.create', compact('clientes', 'tipos', 'responsables'));
     }
 
@@ -40,7 +58,7 @@ class DesarrolloSoftwareController extends Controller
             'estado'            => 'required|string|max:30',
             'historial'         => 'nullable|string',
         ]);
-        $proyecto = DesarrolloSoftware::create($validated);
+        DesarrolloSoftware::create($validated);
         return redirect()->route('desarrollo_software.index')->with('success', 'Proyecto registrado');
     }
 
@@ -52,9 +70,9 @@ class DesarrolloSoftwareController extends Controller
 
     public function edit(DesarrolloSoftware $desarrollo_software)
     {
-        $clientes = Cliente::all();
-        $tipos = TipoSoftware::all();
-        $responsables = Empleado::all();
+        $clientes = Cliente::orderBy('nombre')->get();
+        $tipos = TipoSoftware::orderBy('nombre')->get();
+        $responsables = Empleado::orderBy('nombre')->get();
         return view('desarrollo_software.edit', compact('desarrollo_software', 'clientes', 'tipos', 'responsables'));
     }
 
@@ -82,15 +100,14 @@ class DesarrolloSoftwareController extends Controller
     }
 
     public function exportExcel()
-{
-    return Excel::download(new DesarrolloSoftwareExport, 'proyectos_software.xlsx');
-}
+    {
+        return Excel::download(new DesarrolloSoftwareExport, 'proyectos_software.xlsx');
+    }
 
-public function exportPDF()
-{
-    $proyectos = DesarrolloSoftware::with(['cliente', 'tipoSoftware', 'responsable'])->get();
-    $pdf = PDF::loadView('desarrollo_software.export_pdf', compact('proyectos'));
-    return $pdf->download('proyectos_software.pdf');
-}
-
+    public function exportPDF()
+    {
+        $proyectos = DesarrolloSoftware::with(['cliente', 'tipoSoftware', 'responsable'])->get();
+        $pdf = PDF::loadView('desarrollo_software.export_pdf', compact('proyectos'));
+        return $pdf->download('proyectos_software.pdf');
+    }
 }

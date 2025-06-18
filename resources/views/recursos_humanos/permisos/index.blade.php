@@ -6,7 +6,11 @@
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Inicio</th><th>Fin</th><th>Motivo</th><th>Aprobado</th><th>Acciones</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Motivo</th>
+            <th>Aprobado</th>
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>

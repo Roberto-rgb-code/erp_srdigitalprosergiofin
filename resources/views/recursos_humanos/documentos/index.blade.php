@@ -3,26 +3,32 @@
 <h2>Documentos de {{ $empleado->nombre }} {{ $empleado->apellido }}</h2>
 <a href="{{ route('recursos_humanos.documentos.create', $empleado) }}" class="btn btn-primary mb-2">Nuevo documento</a>
 @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
+
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Nombre</th><th>Archivo</th><th>Acciones</th>
+            <th>Nombre documento</th>
+            <th>Archivo</th>
+            <th>Subido el</th>
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
-        @foreach($documentos as $d)
+        @foreach($documentos as $doc)
         <tr>
-            <td>{{ $d->nombre }}</td>
+            <td>{{ $doc->nombre_documento }}</td>
             <td>
-                @if($d->archivo)
-                    <a href="{{ asset('storage/' . $d->archivo) }}" target="_blank">Ver archivo</a>
+                @if($doc->archivo)
+                    <a href="{{ asset('storage/' . $doc->archivo) }}" target="_blank">Ver/Descargar</a>
+                @else
+                    No disponible
                 @endif
             </td>
+            <td>{{ $doc->created_at }}</td>
             <td>
-                <a href="{{ route('recursos_humanos.documentos.edit', [$empleado, $d]) }}" class="btn btn-sm btn-warning">Editar</a>
-                <form action="{{ route('recursos_humanos.documentos.destroy', [$empleado, $d]) }}" method="POST" style="display:inline-block">
+                <form action="{{ route('recursos_humanos.documentos.destroy', [$empleado, $doc]) }}" method="POST" style="display:inline">
                     @csrf @method('DELETE')
-                    <button onclick="return confirm('¿Eliminar?')" class="btn btn-sm btn-danger">Eliminar</button>
+                    <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?')">Eliminar</button>
                 </form>
             </td>
         </tr>

@@ -32,33 +32,51 @@ class EvidenciaVehiculoController extends Controller
         $validated = $request->validate([
             'uso_id' => 'nullable|integer|exists:uso_vehiculo,id',
             'tipo'   => 'required|string|max:30',
-            'archivo' => 'required|string|max:255', // Si subes archivo real, usa Storage
+            'archivo' => 'required|file|mimes:pdf,jpeg,png,jpg,gif,webp|max:10240',
             'fecha'  => 'required|date'
         ]);
-        $validated['vehiculo_id'] = $vehiculo_id;
-        EvidenciaVehiculo::create($validated);
+
+        $archivoPath = null;
+        if ($request->hasFile('archivo')) {
+            $archivoPath = $request->file('archivo')->store('evidencias_vehiculo', 'public');
+        }
+
+        $data = [
+            'vehiculo_id' => $vehiculo_id,
+            'uso_id' => $validated['uso_id'] ?? null,
+            'tipo' => $validated['tipo'],
+            'archivo' => $archivoPath,
+            'fecha' => $validated['fecha'],
+        ];
+
+        EvidenciaVehiculo::create($data);
+
         return redirect()->route('vehiculos.evidencia.index', $vehiculo_id)->with('success', 'Evidencia registrada');
     }
 
     public function destroy($vehiculo_id, $id)
     {
         $evidencia = EvidenciaVehiculo::findOrFail($id);
+        // Borra el archivo real
+        if ($evidencia->archivo && \Storage::disk('public')->exists($evidencia->archivo)) {
+            \Storage::disk('public')->delete($evidencia->archivo);
+        }
         $evidencia->delete();
         return redirect()->route('vehiculos.evidencia.index', $vehiculo_id)->with('success', 'Evidencia eliminada');
     }
 
     public function exportExcel($vehiculo_id)
-{
-    return Excel::download(new EvidenciaVehiculoExport($vehiculo_id), 'evidencias.xlsx');
-}
+    {
+        return Excel::download(new EvidenciaVehiculoExport($vehiculo_id), 'evidencias.xlsx');
+    }
 
-public function exportPDF($vehiculo_id)
-{
-    $vehiculo = \App\Models\Vehiculo::findOrFail($vehiculo_id);
-    $evidencias = \App\Models\EvidenciaVehiculo::with('uso')->where('vehiculo_id', $vehiculo_id)
-        ->orderByDesc('fecha')->get();
+    public function exportPDF($vehiculo_id)
+    {
+        $vehiculo = \App\Models\Vehiculo::findOrFail($vehiculo_id);
+        $evidencias = \App\Models\EvidenciaVehiculo::with('uso')->where('vehiculo_id', $vehiculo_id)
+            ->orderByDesc('fecha')->get();
 
-    $pdf = PDF::loadView('evidencia_vehiculo.pdf', compact('vehiculo', 'evidencias'));
-    return $pdf->download('evidencias.pdf');
-}
+        $pdf = PDF::loadView('evidencia_vehiculo.pdf', compact('vehiculo', 'evidencias'));
+        return $pdf->download('evidencias.pdf');
+    }
 }

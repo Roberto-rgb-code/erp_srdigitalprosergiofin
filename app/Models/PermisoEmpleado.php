@@ -17,5 +17,11 @@ class PermisoEmpleado extends Model
     {
         return $this->belongsTo(Empleado::class, 'empleado_id');
     }
+
+    public function permisos()
+{
+    return $this->hasMany(\App\Models\PermisoEmpleado::class, 'empleado_id');
+}
+
 }
 

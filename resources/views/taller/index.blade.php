@@ -1,109 +1,95 @@
 @extends('layouts.app')
 @section('content')
-    <h2>Órdenes de Servicio</h2>
-    <div class="mb-3 d-flex gap-2 flex-wrap">
-        <a href="{{ route('taller.create') }}" class="btn btn-primary">Nueva Orden</a>
-        <a href="{{ route('taller.export.excel') }}" class="btn btn-success">Exportar Excel</a>
-        <a href="{{ route('taller.export.pdf') }}" class="btn btn-danger">Exportar PDF</a>
+<div class="d-flex justify-between items-center mb-4 gap-2 flex-wrap">
+    <h2 class="mb-0">Órdenes de Servicio</h2>
+    <div>
+        <a href="{{ route('taller.create') }}" class="btn btn-primary me-1">Nueva Orden</a>
+        <a href="{{ route('taller.export.excel') }}" class="btn btn-outline-success me-1">Exportar Excel</a>
+        <a href="{{ route('taller.export.pdf') }}" class="btn btn-outline-danger me-1">Exportar PDF</a>
+        <a href="{{ route('equipos.index') }}" class="btn btn-info">Ir a Catálogo de Equipos</a>
     </div>
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+</div>
 
-    <h5 class="mt-4">Órdenes de Servicio Registradas</h5>
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Folio</th>
-                <th>Cliente</th>
-                <th>Tipo cliente</th>
-                <th>Equipo</th>
-                <th>IMEI/Serie</th>
-                <th>Técnico</th>
-                <th>Ingreso</th>
-                <th>Entrega</th>
-                <th>Estatus</th>
-                <th>Costo</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($talleres as $t)
-                <tr>
-                    <td>{{ $t->folio }}</td>
-                    <td>{{ $t->cliente->nombre ?? '-' }}</td>
-                    <td>{{ $t->tipo_cliente }}</td>
-                    <td>
-                        {{ $t->equipo->tipo ?? '-' }}
-                        {{ $t->equipo->marca ?? '' }}
-                        {{ $t->equipo->modelo ?? '' }}
-                    </td>
-                    <td>{{ $t->equipo->imei ?? '' }}</td>
-                    <td>{{ $t->tecnico->nombre ?? '-' }}</td>
-                    <td>{{ $t->fecha_ingreso }}</td>
-                    <td>{{ $t->fecha_entrega }}</td>
-                    <td>{{ $t->status }}</td>
-                    <td>${{ number_format($t->costo_total,2) }}</td>
-                    <td>
-                        <a href="{{ route('taller.show', $t) }}" class="btn btn-sm btn-info">Ver</a>
-                        <a href="{{ route('taller.edit', $t) }}" class="btn btn-sm btn-warning">Editar</a>
-                        <form action="{{ route('taller.destroy', $t) }}" method="POST" style="display:inline-block;">
-                            @csrf
-                            @method('DELETE')
-                            <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="11">No hay órdenes registradas.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-    {{ $talleres->links() }}
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
 
-    <h5 class="mt-5">Catálogo de Equipos</h5>
-    <a href="{{ route('equipos.create') }}" class="btn btn-outline-primary mb-2">Registrar nuevo equipo</a>
-    <table class="table table-bordered table-striped">
-        <thead>
+{{-- Gráfico de órdenes por estado --}}
+<div class="mb-4">
+    <canvas id="graficoEstados"></canvas>
+</div>
+
+<h5 class="mt-4">Órdenes de Servicio Registradas</h5>
+<div class="table-responsive">
+<table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Folio</th>
+            <th>Cliente</th>
+            <th>Tipo cliente</th>
+            <th>Equipo</th>
+            <th>IMEI/Serie</th>
+            <th>Técnico</th>
+            <th>Ingreso</th>
+            <th>Entrega</th>
+            <th>Estatus</th>
+            <th>Costo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($talleres as $t)
             <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Marca</th>
-                <th>Modelo</th>
-                <th>Color</th>
-                <th>IMEI/Serie</th>
-                <th>Condición</th>
-                <th>Estética</th>
-                <th>Zona</th>
-                <th>Acciones</th>
+                <td>{{ $t->folio }}</td>
+                <td>{{ $t->cliente->nombre ?? '-' }}</td>
+                <td>{{ $t->tipo_cliente }}</td>
+                <td>
+                    {{ $t->equipo->tipo ?? '-' }}
+                    {{ $t->equipo->marca ?? '' }}
+                    {{ $t->equipo->modelo ?? '' }}
+                </td>
+                <td>{{ $t->equipo->imei ?? '' }}</td>
+                <td>{{ $t->tecnico->nombre ?? '-' }}</td>
+                <td>{{ $t->fecha_ingreso }}</td>
+                <td>{{ $t->fecha_entrega }}</td>
+                <td>{{ $t->status }}</td>
+                <td>${{ number_format($t->costo_total,2) }}</td>
+                <td>
+                    <a href="{{ route('taller.show', $t) }}" class="btn btn-sm btn-info">Ver</a>
+                    <a href="{{ route('taller.edit', $t) }}" class="btn btn-sm btn-warning">Editar</a>
+                    <form action="{{ route('taller.destroy', $t) }}" method="POST" style="display:inline-block;">
+                        @csrf
+                        @method('DELETE')
+                        <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @forelse($equipos as $e)
-                <tr>
-                    <td>{{ $e->id }}</td>
-                    <td>{{ $e->tipo }}</td>
-                    <td>{{ $e->marca }}</td>
-                    <td>{{ $e->modelo }}</td>
-                    <td>{{ $e->color }}</td>
-                    <td>{{ $e->imei }}</td>
-                    <td>{{ $e->condicion_fisica }}</td>
-                    <td>{{ $e->estetica }}</td>
-                    <td>{{ $e->zona_trabajo }}</td>
-                    <td>
-                        <a href="{{ route('equipos.show', $e) }}" class="btn btn-sm btn-info">Ver</a>
-                        <a href="{{ route('equipos.edit', $e) }}" class="btn btn-sm btn-warning">Editar</a>
-                        <form action="{{ route('equipos.destroy', $e) }}" method="POST" style="display:inline-block;">
-                            @csrf
-                            @method('DELETE')
-                            <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="10">Sin equipos registrados.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-    {{ $equipos->links() }}
+        @empty
+            <tr><td colspan="11">No hay órdenes registradas.</td></tr>
+        @endforelse
+    </tbody>
+</table>
+</div>
+{{ $talleres->links() }}
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+@if(isset($graficoEstados))
+    const ctx = document.getElementById('graficoEstados').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: {!! json_encode(array_keys($graficoEstados)) !!},
+            datasets: [{
+                data: {!! json_encode(array_values($graficoEstados)) !!},
+                backgroundColor: [
+                    '#6ec1e4', '#f7b731', '#e17055', '#00b894', '#a29bfe'
+                ],
+            }]
+        }
+    });
+@endif
+</script>
+@endpush
 @endsection

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
     <h2>Agregar Evidencia - {{ $vehiculo->placa }}</h2>
-    <form method="POST" action="{{ route('vehiculos.evidencia.store', $vehiculo->id) }}">
+    <form method="POST" action="{{ route('vehiculos.evidencia.store', $vehiculo->id) }}" enctype="multipart/form-data">
         @csrf
         <div class="mb-3">
             <label>Relacionado a uso (opcional)</label>
@@ -22,8 +22,8 @@
             </select>
         </div>
         <div class="mb-3">
-            <label>Archivo (ruta o nombre, integra subida real si gustas)</label>
-            <input type="text" name="archivo" class="form-control" required>
+            <label>Archivo (PDF o imagen)</label>
+            <input type="file" name="archivo" class="form-control" accept="application/pdf,image/*" required>
         </div>
         <div class="mb-3">
             <label>Fecha</label>

@@ -18,8 +18,8 @@
     <div class="mb-2">
         <label>Aprobado:</label>
         <select name="aprobado" class="form-control">
-            <option value="1">Sí</option>
-            <option value="0">No</option>
+            <option value="1" @selected(old('aprobado')=='1')>Sí</option>
+            <option value="0" @selected(old('aprobado')=='0')>No</option>
         </select>
     </div>
     <button class="btn btn-success">Guardar</button>

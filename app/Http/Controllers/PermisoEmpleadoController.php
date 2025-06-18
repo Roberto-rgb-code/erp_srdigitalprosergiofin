@@ -1,6 +1,5 @@
 <?php
 
-// app/Http/Controllers/PermisoEmpleadoController.php
 namespace App\Http\Controllers;
 
 use App\Models\Empleado;

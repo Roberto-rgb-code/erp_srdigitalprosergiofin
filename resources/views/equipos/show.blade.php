@@ -1,18 +1,29 @@
 @extends('layouts.app')
 @section('content')
-    <h2>Detalle del Equipo</h2>
-    <table class="table">
-        <tr><th>ID</th><td>{{ $equipo->id }}</td></tr>
-        <tr><th>Tipo</th><td>{{ $equipo->tipo }}</td></tr>
-        <tr><th>Marca</th><td>{{ $equipo->marca }}</td></tr>
-        <tr><th>Modelo</th><td>{{ $equipo->modelo }}</td></tr>
-        <tr><th>Color</th><td>{{ $equipo->color }}</td></tr>
-        <tr><th>IMEI / Serie</th><td>{{ $equipo->imei }}</td></tr>
-        <tr><th>Condición física</th><td>{{ $equipo->condicion_fisica }}</td></tr>
-        <tr><th>Estética</th><td>{{ $equipo->estetica }}</td></tr>
-        <tr><th>Tipo de bloqueo</th><td>{{ $equipo->tipo_bloqueo }}</td></tr>
-        <tr><th>Zona de trabajo</th><td>{{ $equipo->zona_trabajo }}</td></tr>
-    </table>
-    <a href="{{ route('equipos.index') }}" class="btn btn-secondary">Regresar</a>
-    <a href="{{ route('equipos.edit', $equipo) }}" class="btn btn-warning">Editar</a>
+<div class="card mt-4 shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Detalle de Equipo #{{ $equipo->id }}</h4>
+        <a href="{{ route('equipos.index') }}" class="btn btn-secondary btn-sm">Volver</a>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Tipo</dt>
+            <dd class="col-sm-9">{{ $equipo->tipo }}</dd>
+            <dt class="col-sm-3">Marca</dt>
+            <dd class="col-sm-9">{{ $equipo->marca }}</dd>
+            <dt class="col-sm-3">Modelo</dt>
+            <dd class="col-sm-9">{{ $equipo->modelo }}</dd>
+            <dt class="col-sm-3">Color</dt>
+            <dd class="col-sm-9"><span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:{{ $equipo->color }};border:1px solid #ccc;"></span> {{ $equipo->color }}</dd>
+            <dt class="col-sm-3">IMEI/Serie</dt>
+            <dd class="col-sm-9">{{ $equipo->imei }}</dd>
+            <dt class="col-sm-3">Condición Física</dt>
+            <dd class="col-sm-9">{{ $equipo->condicion_fisica }}</dd>
+            <dt class="col-sm-3">Estética</dt>
+            <dd class="col-sm-9">{{ $equipo->estetica }}</dd>
+            <dt class="col-sm-3">Zona de trabajo</dt>
+            <dd class="col-sm-9">{{ $equipo->zona_trabajo }}</dd>
+        </dl>
+    </div>
+</div>
 @endsection

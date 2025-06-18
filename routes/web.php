@@ -54,10 +54,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('ventas/export-excel', [VentaController::class, 'exportExcel'])->name('ventas.export.excel');
     Route::get('ventas/export-pdf', [VentaController::class, 'exportPDF'])->name('ventas.export.pdf');
-    // Esta es la ruta correcta para la factura PDF INDIVIDUAL
     Route::get('ventas/{venta}/factura', [VentaController::class, 'facturaPDF'])->name('ventas.factura');
-
-    // Detalle de ventas
     Route::get('ventas/{venta}/detalle_ventas/export-excel', [DetalleVentaController::class, 'exportExcel'])->name('ventas.detalle_ventas.export.excel');
     Route::get('ventas/{venta}/detalle_ventas/export-pdf', [DetalleVentaController::class, 'exportPDF'])->name('ventas.detalle_ventas.export.pdf');
 
@@ -69,40 +66,77 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cableado/export-excel', [CableadoController::class, 'exportExcel'])->name('cableado.export.excel');
     Route::get('cableado/export-pdf', [CableadoController::class, 'exportPDF'])->name('cableado.export.pdf');
 
-    // Vehículos y submódulos
+    // ------ VEHÍCULOS Y SUBMÓDULOS (con todas las rutas de exportación) ------
     Route::get('vehiculos/export-excel', [VehiculoController::class, 'exportExcel'])->name('vehiculos.export.excel');
     Route::get('vehiculos/export-pdf', [VehiculoController::class, 'exportPDF'])->name('vehiculos.export.pdf');
-    Route::get('vehiculos/{vehiculo}/consumo/export-excel', [ConsumoCombustibleController::class, 'exportExcel'])->name('vehiculos.consumo.export.excel');
-    Route::get('vehiculos/{vehiculo}/consumo/export-pdf', [ConsumoCombustibleController::class, 'exportPDF'])->name('vehiculos.consumo.export.pdf');
-    Route::get('vehiculos/{vehiculo}/mantenimiento/export-excel', [MantenimientoVehiculoController::class, 'exportExcel'])->name('vehiculos.mantenimiento.export.excel');
-    Route::get('vehiculos/{vehiculo}/mantenimiento/export-pdf', [MantenimientoVehiculoController::class, 'exportPDF'])->name('vehiculos.mantenimiento.export.pdf');
-    Route::get('vehiculos/{vehiculo}/uso/export-excel', [UsoVehiculoController::class, 'exportExcel'])->name('vehiculos.uso.export.excel');
-    Route::get('vehiculos/{vehiculo}/uso/export-pdf', [UsoVehiculoController::class, 'exportPDF'])->name('vehiculos.uso.export.pdf');
-    Route::get('vehiculos/{vehiculo}/evidencia/export-excel', [EvidenciaVehiculoController::class, 'exportExcel'])->name('vehiculos.evidencia.export.excel');
-    Route::get('vehiculos/{vehiculo}/evidencia/export-pdf', [EvidenciaVehiculoController::class, 'exportPDF'])->name('vehiculos.evidencia.export.pdf');
 
-    // Desarrollo software
+    // Consumo Combustible
+    Route::prefix('vehiculos/{vehiculo}/consumo')->name('vehiculos.consumo.')->group(function () {
+        Route::get('/', [ConsumoCombustibleController::class, 'index'])->name('index');
+        Route::get('create', [ConsumoCombustibleController::class, 'create'])->name('create');
+        Route::post('/', [ConsumoCombustibleController::class, 'store'])->name('store');
+        Route::get('{consumo}/edit', [ConsumoCombustibleController::class, 'edit'])->name('edit');
+        Route::put('{consumo}', [ConsumoCombustibleController::class, 'update'])->name('update');
+        Route::delete('{consumo}', [ConsumoCombustibleController::class, 'destroy'])->name('destroy');
+        Route::get('export-excel', [ConsumoCombustibleController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('export-pdf', [ConsumoCombustibleController::class, 'exportPDF'])->name('exportPDF');
+    });
+
+    // Mantenimiento Vehículo
+    Route::prefix('vehiculos/{vehiculo}/mantenimiento')->name('vehiculos.mantenimiento.')->group(function () {
+        Route::get('/', [MantenimientoVehiculoController::class, 'index'])->name('index');
+        Route::get('create', [MantenimientoVehiculoController::class, 'create'])->name('create');
+        Route::post('/', [MantenimientoVehiculoController::class, 'store'])->name('store');
+        Route::get('{mantenimiento}/edit', [MantenimientoVehiculoController::class, 'edit'])->name('edit');
+        Route::put('{mantenimiento}', [MantenimientoVehiculoController::class, 'update'])->name('update');
+        Route::delete('{mantenimiento}', [MantenimientoVehiculoController::class, 'destroy'])->name('destroy');
+        Route::get('export-excel', [MantenimientoVehiculoController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('export-pdf', [MantenimientoVehiculoController::class, 'exportPDF'])->name('exportPDF');
+    });
+
+    // Uso Vehículo
+    Route::prefix('vehiculos/{vehiculo}/uso')->name('vehiculos.uso.')->group(function () {
+        Route::get('/', [UsoVehiculoController::class, 'index'])->name('index');
+        Route::get('create', [UsoVehiculoController::class, 'create'])->name('create');
+        Route::post('/', [UsoVehiculoController::class, 'store'])->name('store');
+        Route::get('{uso}/edit', [UsoVehiculoController::class, 'edit'])->name('edit');
+        Route::put('{uso}', [UsoVehiculoController::class, 'update'])->name('update');
+        Route::delete('{uso}', [UsoVehiculoController::class, 'destroy'])->name('destroy');
+        Route::get('export-excel', [UsoVehiculoController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('export-pdf', [UsoVehiculoController::class, 'exportPDF'])->name('exportPDF');
+    });
+
+    // Evidencia Vehículo
+    Route::prefix('vehiculos/{vehiculo}/evidencia')->name('vehiculos.evidencia.')->group(function () {
+        Route::get('/', [EvidenciaVehiculoController::class, 'index'])->name('index');
+        Route::get('create', [EvidenciaVehiculoController::class, 'create'])->name('create');
+        Route::post('/', [EvidenciaVehiculoController::class, 'store'])->name('store');
+        Route::delete('{evidencia}', [EvidenciaVehiculoController::class, 'destroy'])->name('destroy');
+        Route::get('export-excel', [EvidenciaVehiculoController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('export-pdf', [EvidenciaVehiculoController::class, 'exportPDF'])->name('exportPDF');
+    });
+
+    // ------ DESARROLLO SOFTWARE ------
     Route::get('desarrollo_software/export-excel', [DesarrolloSoftwareController::class, 'exportExcel'])->name('desarrollo_software.export.excel');
     Route::get('desarrollo_software/export-pdf', [DesarrolloSoftwareController::class, 'exportPDF'])->name('desarrollo_software.export.pdf');
 
-    // Servicios empresariales
+    // ------ SERVICIOS EMPRESARIALES ------
     Route::get('servicios_empresariales/export-excel', [ServicioEmpresarialController::class, 'exportExcel'])->name('servicios_empresariales.export.excel');
     Route::get('servicios_empresariales/export-pdf', [ServicioEmpresarialController::class, 'exportPDF'])->name('servicios_empresariales.export.pdf');
 
-    // Tickets soporte
+    // ------ TICKETS SOPORTE ------
     Route::get('tickets_soporte/export-excel', [TicketSoporteController::class, 'exportExcel'])->name('tickets_soporte.export.excel');
     Route::get('tickets_soporte/export-pdf', [TicketSoporteController::class, 'exportPDF'])->name('tickets_soporte.export.pdf');
 
-    // Recursos humanos
+    // ------ RECURSOS HUMANOS ------
     Route::get('recursos_humanos/export-excel', [EmpleadoController::class, 'exportExcel'])->name('recursos_humanos.export.excel');
     Route::get('recursos_humanos/export-pdf', [EmpleadoController::class, 'exportPDF'])->name('recursos_humanos.export.pdf');
 
-    // Cuentas por cobrar/pagar
+    // ------ CUENTAS POR COBRAR/PAGAR ------
     Route::get('cuentas_por_cobrar/export-excel', [CuentasPorCobrarController::class, 'exportExcel'])->name('cuentas_por_cobrar.export.excel');
     Route::get('cuentas_por_cobrar/export-pdf', [CuentasPorCobrarController::class, 'exportPDF'])->name('cuentas_por_cobrar.export.pdf');
     Route::post('cuentas_por_cobrar/{id}/cobros', [CuentasPorCobrarController::class, 'registrarCobro'])->name('cuentas_por_cobrar.cobros');
     Route::post('cuentas_por_cobrar/{id}/seguimientos', [CuentasPorCobrarController::class, 'registrarSeguimiento'])->name('cuentas_por_cobrar.seguimientos');
-
     Route::get('cuentas_por_pagar/export-excel', [CuentasPorPagarController::class, 'exportExcel'])->name('cuentas_por_pagar.export.excel');
     Route::get('cuentas_por_pagar/export-pdf', [CuentasPorPagarController::class, 'exportPDF'])->name('cuentas_por_pagar.export.pdf');
     Route::post('cuentas_por_pagar/{id}/registrar-pago', [CuentasPorPagarController::class, 'registrarPago'])->name('cuentas_por_pagar.registrarPago');
@@ -129,38 +163,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('cuentas_por_pagar', CuentasPorPagarController::class);
     Route::resource('recursos_humanos', EmpleadoController::class);
     Route::resource('puestos_empleado', PuestoEmpleadoController::class)->except(['show']);
-
-    // ------ SUBMÓDULOS VEHÍCULOS ------
-    Route::prefix('vehiculos/{vehiculo}/consumo')->name('vehiculos.consumo.')->group(function () {
-        Route::get('/', [ConsumoCombustibleController::class, 'index'])->name('index');
-        Route::get('create', [ConsumoCombustibleController::class, 'create'])->name('create');
-        Route::post('/', [ConsumoCombustibleController::class, 'store'])->name('store');
-        Route::get('{consumo}/edit', [ConsumoCombustibleController::class, 'edit'])->name('edit');
-        Route::put('{consumo}', [ConsumoCombustibleController::class, 'update'])->name('update');
-        Route::delete('{consumo}', [ConsumoCombustibleController::class, 'destroy'])->name('destroy');
-    });
-    Route::prefix('vehiculos/{vehiculo}/mantenimiento')->name('vehiculos.mantenimiento.')->group(function () {
-        Route::get('/', [MantenimientoVehiculoController::class, 'index'])->name('index');
-        Route::get('create', [MantenimientoVehiculoController::class, 'create'])->name('create');
-        Route::post('/', [MantenimientoVehiculoController::class, 'store'])->name('store');
-        Route::get('{mantenimiento}/edit', [MantenimientoVehiculoController::class, 'edit'])->name('edit');
-        Route::put('{mantenimiento}', [MantenimientoVehiculoController::class, 'update'])->name('update');
-        Route::delete('{mantenimiento}', [MantenimientoVehiculoController::class, 'destroy'])->name('destroy');
-    });
-    Route::prefix('vehiculos/{vehiculo}/uso')->name('vehiculos.uso.')->group(function () {
-        Route::get('/', [UsoVehiculoController::class, 'index'])->name('index');
-        Route::get('create', [UsoVehiculoController::class, 'create'])->name('create');
-        Route::post('/', [UsoVehiculoController::class, 'store'])->name('store');
-        Route::get('{uso}/edit', [UsoVehiculoController::class, 'edit'])->name('edit');
-        Route::put('{uso}', [UsoVehiculoController::class, 'update'])->name('update');
-        Route::delete('{uso}', [UsoVehiculoController::class, 'destroy'])->name('destroy');
-    });
-    Route::prefix('vehiculos/{vehiculo}/evidencia')->name('vehiculos.evidencia.')->group(function () {
-        Route::get('/', [EvidenciaVehiculoController::class, 'index'])->name('index');
-        Route::get('create', [EvidenciaVehiculoController::class, 'create'])->name('create');
-        Route::post('/', [EvidenciaVehiculoController::class, 'store'])->name('store');
-        Route::delete('{evidencia}', [EvidenciaVehiculoController::class, 'destroy'])->name('destroy');
-    });
 
     // ------ SUBMÓDULOS DESARROLLO SOFTWARE ------
     Route::prefix('desarrollo_software/{proyecto}/modulos')->name('modulos_software.')->group(function () {

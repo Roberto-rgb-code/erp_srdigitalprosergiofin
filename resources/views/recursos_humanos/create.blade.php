@@ -32,7 +32,13 @@
     </div>
     <div class="mb-2">
         <label>Puesto:</label>
-        <input type="text" name="puesto" class="form-control" value="{{ old('puesto') }}">
+        <input type="text" name="puesto" class="form-control" value="{{ old('puesto') }}" required>
+        {{-- <select name="puesto_id" class="form-control">
+            <option value="">Seleccione...</option>
+            @foreach($puestos as $p)
+                <option value="{{ $p->id }}">{{ $p->nombre }}</option>
+            @endforeach
+        </select> --}}
     </div>
     <div class="mb-2">
         <label>Fecha de ingreso:</label>

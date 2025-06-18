@@ -13,40 +13,57 @@ use PDF;
 class VehiculoController extends Controller
 {
     public function index(Request $request)
-{
-    $query = \App\Models\Vehiculo::with(['responsable', 'cliente']);
+    {
+        $query = Vehiculo::with(['responsable', 'cliente']);
 
-    if ($request->filled('placa')) {
-        $query->where('placa', 'ilike', '%' . $request->placa . '%');
-    }
-    if ($request->filled('marca')) {
-        $query->where('marca', 'ilike', '%' . $request->marca . '%');
-    }
-    if ($request->filled('modelo')) {
-        $query->where('modelo', 'ilike', '%' . $request->modelo . '%');
-    }
-    if ($request->filled('responsable_id')) {
-        $query->where('responsable_id', $request->responsable_id);
-    }
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
-    // Filtro por rango de año
-    if ($request->filled('anio_de') && $request->filled('anio_hasta')) {
-        $query->whereBetween('año', [$request->anio_de, $request->anio_hasta]);
-    } elseif ($request->filled('anio_de')) {
-        $query->where('año', '>=', $request->anio_de);
-    } elseif ($request->filled('anio_hasta')) {
-        $query->where('año', '<=', $request->anio_hasta);
-    }
+        // Filtros
+        if ($request->filled('placa')) {
+            $query->where('placa', 'ilike', '%' . $request->placa . '%');
+        }
+        if ($request->filled('marca')) {
+            $query->where('marca', 'ilike', '%' . $request->marca . '%');
+        }
+        if ($request->filled('modelo')) {
+            $query->where('modelo', 'ilike', '%' . $request->modelo . '%');
+        }
+        if ($request->filled('responsable_id')) {
+            $query->where('responsable_id', $request->responsable_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('anio_de') && $request->filled('anio_hasta')) {
+            $query->whereBetween('año', [$request->anio_de, $request->anio_hasta]);
+        } elseif ($request->filled('anio_de')) {
+            $query->where('año', '>=', $request->anio_de);
+        } elseif ($request->filled('anio_hasta')) {
+            $query->where('año', '<=', $request->anio_hasta);
+        }
 
-    $vehiculos = $query->orderByDesc('id')->paginate(15);
+        $vehiculos = $query->orderByDesc('id')->paginate(15);
 
-    $responsables = \App\Models\Empleado::orderBy('nombre')->get();
+        $responsables = Empleado::orderBy('nombre')->get();
 
-    return view('vehiculos.index', compact('vehiculos', 'responsables'));
-}
+        // ------ GRAFICOS --------
+        // Agrupamiento por status
+        $graficoEstados = Vehiculo::selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
 
+        // Agrupamiento por marca
+        $graficoMarcas = Vehiculo::selectRaw('marca, count(*) as total')
+            ->groupBy('marca')
+            ->pluck('total', 'marca')
+            ->toArray();
+
+        return view('vehiculos.index', compact(
+            'vehiculos',
+            'responsables',
+            'graficoEstados',
+            'graficoMarcas'
+        ));
+    }
 
     public function create()
     {
@@ -111,14 +128,14 @@ class VehiculoController extends Controller
     }
 
     public function exportExcel()
-{
-    return Excel::download(new VehiculosExport(), 'vehiculos.xlsx');
-}
+    {
+        return Excel::download(new VehiculosExport(), 'vehiculos.xlsx');
+    }
 
-public function exportPDF()
-{
-    $vehiculos = \App\Models\Vehiculo::with(['responsable', 'cliente'])->get();
-    $pdf = PDF::loadView('vehiculos.pdf', compact('vehiculos'));
-    return $pdf->download('vehiculos.pdf');
-}
+    public function exportPDF()
+    {
+        $vehiculos = Vehiculo::with(['responsable', 'cliente'])->get();
+        $pdf = PDF::loadView('vehiculos.pdf', compact('vehiculos'));
+        return $pdf->download('vehiculos.pdf');
+    }
 }
