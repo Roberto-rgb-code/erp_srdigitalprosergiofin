@@ -23,12 +23,12 @@ class InventarioClienteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'cliente_id' => 'required|exists:clientes,id',
+            'cliente_id'    => 'required|exists:clientes,id',
             'nombre_equipo' => 'required|string|max:80',
-            'tipo_equipo' => 'nullable|string|max:50',
-            'modelo' => 'nullable|string|max:50',
-            'serie' => 'nullable|string|max:50',
-            'ubicacion' => 'nullable|string|max:100',
+            'tipo_equipo'   => 'nullable|string|max:50',
+            'modelo'        => 'nullable|string|max:50',
+            'serie'         => 'nullable|string|max:50',
+            'ubicacion'     => 'nullable|string|max:100',
         ]);
         InventarioCliente::create($request->all());
         return redirect()->route('inventario_clientes.index')->with('success', 'Equipo registrado');
@@ -36,25 +36,26 @@ class InventarioClienteController extends Controller
 
     public function show(InventarioCliente $inventario_cliente)
     {
-        $inventario_cliente->load('cliente');
-        return view('inventario_clientes.show', compact('inventario_cliente'));
+        $equipo = $inventario_cliente->load('cliente');
+        return view('inventario_clientes.show', compact('equipo'));
     }
 
     public function edit(InventarioCliente $inventario_cliente)
     {
+        $equipo = $inventario_cliente;
         $clientes = Cliente::all();
-        return view('inventario_clientes.edit', compact('inventario_cliente', 'clientes'));
+        return view('inventario_clientes.edit', compact('equipo', 'clientes'));
     }
 
     public function update(Request $request, InventarioCliente $inventario_cliente)
     {
         $request->validate([
-            'cliente_id' => 'required|exists:clientes,id',
+            'cliente_id'    => 'required|exists:clientes,id',
             'nombre_equipo' => 'required|string|max:80',
-            'tipo_equipo' => 'nullable|string|max:50',
-            'modelo' => 'nullable|string|max:50',
-            'serie' => 'nullable|string|max:50',
-            'ubicacion' => 'nullable|string|max:100',
+            'tipo_equipo'   => 'nullable|string|max:50',
+            'modelo'        => 'nullable|string|max:50',
+            'serie'         => 'nullable|string|max:50',
+            'ubicacion'     => 'nullable|string|max:100',
         ]);
         $inventario_cliente->update($request->all());
         return redirect()->route('inventario_clientes.index')->with('success', 'Equipo actualizado');

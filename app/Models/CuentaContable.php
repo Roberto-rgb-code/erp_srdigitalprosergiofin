@@ -12,24 +12,18 @@ class CuentaContable extends Model
         'codigo',
         'nombre',
         'tipo',
-        'nivel',
-        'padre_id', // Si manejas jerarquía
-        'status'
+        'cuenta_padre_id',
     ];
 
-    // Relación padre-hijos para árbol de cuentas
-    public function padre()
+    // Relación padre-hijo: Una cuenta puede tener una cuenta padre
+    public function cuentaPadre()
     {
-        return $this->belongsTo(CuentaContable::class, 'padre_id');
+        return $this->belongsTo(CuentaContable::class, 'cuenta_padre_id');
     }
 
-    public function hijos()
+    // Relación inversa: una cuenta puede tener muchas cuentas hijas
+    public function cuentasHijas()
     {
-        return $this->hasMany(CuentaContable::class, 'padre_id');
-    }
-
-    public function diarioContable()
-    {
-        return $this->hasMany(DiarioContable::class, 'cuenta_contable_id');
+        return $this->hasMany(CuentaContable::class, 'cuenta_padre_id');
     }
 }

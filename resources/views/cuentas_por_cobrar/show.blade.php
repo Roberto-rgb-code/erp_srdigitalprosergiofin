@@ -1,162 +1,71 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container">
-
-    <h2>Detalle de Cuenta por Cobrar</h2>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">{{ $cuenta->cliente->nombre ?? 'Sin cliente' }}</h5>
-            <p class="card-text">
-                <b>Factura (Venta):</b> {{ $cuenta->venta_id ?? '-' }}<br>
-                <b>Monto Original:</b> ${{ number_format($cuenta->monto, 2) }}<br>
-                <b>Saldo Pendiente:</b> ${{ number_format($cuenta->saldo, 2) }}<br>
-                <b>Fecha de Vencimiento:</b> {{ $cuenta->fecha_vencimiento ? \Carbon\Carbon::parse($cuenta->fecha_vencimiento)->format('d/m/Y') : '-' }}<br>
-                <b>Estatus:</b> {{ $cuenta->estatus }}<br>
-                <b>Semáforo:</b>
-                @if($cuenta->semaforo == 'verde')
-                    <span style="color:green;">● En tiempo</span>
-                @elseif($cuenta->semaforo == 'amarillo')
-                    <span style="color:orange;">● Próximo a vencer</span>
-                @elseif($cuenta->semaforo == 'rojo')
-                    <span style="color:red;">● Vencida</span>
-                @else
-                    <span style="color:gray;">● Pagado</span>
-                @endif
-                <br>
-                <b>Porcentaje de Impacto:</b> {{ $porcentaje_impacto }}%<br>
-                <b>Comentarios:</b> {{ $cuenta->comentarios ?? '-' }}
-            </p>
-        </div>
+    <h2>Detalle Cuenta por Cobrar</h2>
+    <div class="card p-4 mb-4">
+        <div><strong>Folio:</strong> {{ $cuenta->folio }}</div>
+        <div><strong>Cliente:</strong> {{ $cuenta->cliente->nombre ?? '' }}</div>
+        <div><strong>Emisión:</strong> {{ $cuenta->fecha_emision }}</div>
+        <div><strong>Vencimiento:</strong> {{ $cuenta->fecha_vencimiento }}</div>
+        <div><strong>Monto total:</strong> ${{ number_format($cuenta->monto_total,2) }}</div>
+        <div><strong>Saldo pendiente:</strong> ${{ number_format($cuenta->saldo_pendiente,2) }}</div>
+        <div><strong>Estatus:</strong> <span class="badge" style="background:
+                        @if($cuenta->status=='Atrasado') #ff6b6b
+                        @elseif($cuenta->status=='En tiempo') #51cf66
+                        @else #adb5bd
+                        @endif
+                    ">{{ $cuenta->status }}</span></div>
+        @if($cuenta->documento)
+            <div><a href="{{ Storage::url($cuenta->documento) }}" target="_blank">Documento</a></div>
+        @endif
+        <div><strong>Descripción:</strong> {{ $cuenta->descripcion }}</div>
     </div>
 
-    {{-- TABLA DE COBROS (PAGOS) --}}
-    <h4>Cobros realizados</h4>
-    <table class="table table-sm table-bordered">
+    <h4>Registrar Cobro</h4>
+    <form action="{{ route('cuentas_por_cobrar.cobros', $cuenta->id) }}" method="POST" enctype="multipart/form-data" class="mb-4">
+        @csrf
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label>Fecha de cobro</label>
+                <input type="date" name="fecha_cobro" class="form-control" required>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label>Monto cobrado</label>
+                <input type="number" name="monto_cobrado" step="0.01" class="form-control" required>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label>Recibo (opcional)</label>
+                <input type="file" name="recibo" class="form-control">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label>Observaciones</label>
+                <input type="text" name="observaciones" class="form-control">
+            </div>
+        </div>
+        <button class="btn btn-success">Registrar cobro</button>
+    </form>
+
+    <h4>Historial de cobros</h4>
+    <table class="table table-bordered">
         <thead>
             <tr>
-                <th>#</th>
-                <th>Monto</th>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Comentarios</th>
-                <th>Recibo</th>
+                <th>Fecha</th><th>Monto</th><th>Recibo</th><th>Observaciones</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($cuenta->cobros as $cobro)
+            @foreach($cuenta->cobros as $cobro)
                 <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>${{ number_format($cobro->monto, 2) }}</td>
-                    <td>{{ \Carbon\Carbon::parse($cobro->fecha)->format('d/m/Y') }}</td>
-                    <td>{{ $cobro->tipo }}</td>
-                    <td>{{ $cobro->comentarios }}</td>
+                    <td>{{ $cobro->fecha_cobro }}</td>
+                    <td>${{ number_format($cobro->monto_cobrado,2) }}</td>
                     <td>
                         @if($cobro->recibo)
-                            <a href="{{ asset('storage/' . $cobro->recibo) }}" target="_blank">Ver</a>
-                        @else
-                            -
+                            <a href="{{ Storage::url($cobro->recibo) }}" target="_blank">Ver recibo</a>
                         @endif
                     </td>
+                    <td>{{ $cobro->observaciones }}</td>
                 </tr>
-            @empty
-                <tr><td colspan="6">Sin cobros registrados.</td></tr>
-            @endforelse
+            @endforeach
         </tbody>
     </table>
-
-    {{-- FORMULARIO PARA REGISTRAR NUEVO COBRO --}}
-    @if($cuenta->saldo > 0)
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5>Registrar cobro</h5>
-            <form action="{{ route('cuentas_por_cobrar.cobros', $cuenta->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="mb-2">
-                    <label>Monto a pagar</label>
-                    <input type="number" name="monto" step="0.01" max="{{ $cuenta->saldo }}" required class="form-control" value="{{ old('monto') }}">
-                </div>
-                <div class="mb-2">
-                    <label>Fecha</label>
-                    <input type="date" name="fecha" required class="form-control" value="{{ old('fecha', date('Y-m-d')) }}">
-                </div>
-                <div class="mb-2">
-                    <label>Tipo de pago</label>
-                    <select name="tipo" class="form-control" required>
-                        <option value="">Selecciona</option>
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Cheque">Cheque</option>
-                        <option value="Otro">Otro</option>
-                    </select>
-                </div>
-                <div class="mb-2">
-                    <label>Comentarios</label>
-                    <input type="text" name="comentarios" class="form-control" value="{{ old('comentarios') }}">
-                </div>
-                <div class="mb-2">
-                    <label>Recibo (opcional)</label>
-                    <input type="file" name="recibo" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-success">Registrar cobro</button>
-            </form>
-        </div>
-    </div>
-    @endif
-
-    {{-- HISTORIAL DE SEGUIMIENTOS --}}
-    <h4>Seguimiento y gestión</h4>
-    <table class="table table-sm table-bordered">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Tipo</th>
-                <th>Descripción</th>
-                <th>Usuario</th>
-                <th>Fecha</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($cuenta->seguimientos as $seg)
-                <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>{{ $seg->tipo }}</td>
-                    <td>{{ $seg->descripcion }}</td>
-                    <td>{{ $seg->usuario->nombre ?? '-' }}</td>
-                    <td>{{ \Carbon\Carbon::parse($seg->fecha)->format('d/m/Y H:i') }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="5">Sin seguimientos registrados.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    {{-- FORMULARIO DE SEGUIMIENTO --}}
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5>Registrar seguimiento</h5>
-            <form action="{{ route('cuentas_por_cobrar.seguimientos', $cuenta->id) }}" method="POST">
-                @csrf
-                <div class="mb-2">
-                    <label>Tipo de seguimiento</label>
-                    <select name="tipo" class="form-control" required>
-                        <option value="">Selecciona</option>
-                        <option value="Llamada">Llamada</option>
-                        <option value="Correo">Correo</option>
-                        <option value="Mensaje">Mensaje</option>
-                        <option value="WhatsApp">WhatsApp</option>
-                        <option value="Otro">Otro</option>
-                    </select>
-                </div>
-                <div class="mb-2">
-                    <label>Descripción / Nota</label>
-                    <textarea name="descripcion" class="form-control" required>{{ old('descripcion') }}</textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">Agregar seguimiento</button>
-            </form>
-        </div>
-    </div>
-
-    <a href="{{ route('cuentas_por_cobrar.index') }}" class="btn btn-secondary">Volver</a>
 </div>
 @endsection

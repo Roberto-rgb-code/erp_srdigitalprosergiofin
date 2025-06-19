@@ -2,124 +2,125 @@
 
 @section('content')
 <div class="container">
-    <h2>Cuentas por Pagar</h2>
+    <h2 class="mb-4">Cuentas por Pagar</h2>
 
-    {{-- Acciones y exportaciones --}}
-    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-        <a href="{{ route('cuentas_por_pagar.create') }}" class="btn btn-primary btn-sm">Nueva Cuenta por Pagar</a>
-        <a href="{{ route('cuentas_por_pagar.export.excel') }}" class="btn btn-success btn-sm">Exportar Excel</a>
-        <a href="{{ route('cuentas_por_pagar.export.pdf') }}" class="btn btn-danger btn-sm">Exportar PDF</a>
-    </div>
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-    {{-- Filtros --}}
+    {{-- FILTROS --}}
     <form class="row row-cols-lg-auto g-2 align-items-center mb-4" method="GET">
         <div class="col">
             <select name="proveedor_id" class="form-select">
-                <option value="">Proveedor</option>
-                @foreach($proveedores as $p)
-                    <option value="{{ $p->id }}" @if(request('proveedor_id') == $p->id) selected @endif>{{ $p->nombre }}</option>
+                <option value="">Todos los proveedores</option>
+                @foreach($proveedores as $prov)
+                    <option value="{{ $prov->id }}" {{ request('proveedor_id') == $prov->id ? 'selected' : '' }}>
+                        {{ $prov->nombre }}
+                    </option>
                 @endforeach
             </select>
         </div>
         <div class="col">
             <select name="estatus" class="form-select">
-                <option value="">Estatus</option>
-                <option value="En tiempo" @if(request('estatus') == 'En tiempo') selected @endif>En tiempo</option>
-                <option value="Próximo a vencer" @if(request('estatus') == 'Próximo a vencer') selected @endif>Próximo a vencer</option>
-                <option value="Vencido" @if(request('estatus') == 'Vencido') selected @endif>Vencido</option>
-                <option value="Pagado" @if(request('estatus') == 'Pagado') selected @endif>Pagado</option>
+                <option value="">Todos los estatus</option>
+                <option value="En tiempo" {{ request('estatus') == 'En tiempo' ? 'selected' : '' }}>En tiempo</option>
+                <option value="Próximo a vencer" {{ request('estatus') == 'Próximo a vencer' ? 'selected' : '' }}>Próximo a vencer</option>
+                <option value="Vencido" {{ request('estatus') == 'Vencido' ? 'selected' : '' }}>Vencido</option>
+                <option value="Pagado" {{ request('estatus') == 'Pagado' ? 'selected' : '' }}>Pagado</option>
             </select>
         </div>
         <div class="col">
-            <label>Vencimiento</label>
-            <input type="date" name="desde" class="form-control" value="{{ request('desde') }}">
-        </div>
-        <div class="col">
-            <label>a</label>
-            <input type="date" name="hasta" class="form-control" value="{{ request('hasta') }}">
-        </div>
-        <div class="col">
-            <button class="btn btn-outline-secondary" type="submit">Filtrar</button>
-        </div>
-        <div class="col">
-            <a href="{{ route('cuentas_por_pagar.index') }}" class="btn btn-outline-dark">Limpiar</a>
+            <button class="btn btn-primary">Filtrar</button>
         </div>
     </form>
 
-    {{-- Tabla de registros --}}
-    <div class="table-responsive">
-        <table class="table table-bordered align-middle">
+    <div class="mb-3 d-flex gap-2">
+        <a href="{{ route('cuentas_por_pagar.export.excel') }}" class="btn btn-success">Exportar Excel</a>
+        <a href="{{ route('cuentas_por_pagar.export.pdf') }}" class="btn btn-danger">Exportar PDF</a>
+    </div>
+
+    <div>
+        <canvas id="graficoCuentasPorPagar" height="100"></canvas>
+    </div>
+
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
+                    <th>ID</th>
                     <th>Proveedor</th>
                     <th>Factura</th>
+                    <th>Emisión</th>
+                    <th>Vencimiento</th>
                     <th>Monto</th>
                     <th>Saldo</th>
-                    <th>Vencimiento</th>
-                    <th>Pago</th>
                     <th>Estatus</th>
-                    <th>Comentarios</th>
-                    <th>Comprobante</th>
+                    <th>XML</th>
+                    <th>PDF</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-            @forelse($registros as $c)
+            @foreach($cuentas as $c)
                 <tr>
+                    <td>{{ $c->id }}</td>
                     <td>{{ $c->proveedor->nombre ?? '-' }}</td>
-                    <td>{{ $c->factura }}</td>
-                    <td>${{ number_format($c->monto, 2) }}</td>
-                    <td>${{ number_format($c->saldo, 2) }}</td>
+                    <td>{{ $c->folio_factura }}</td>
+                    <td>{{ $c->fecha_emision }}</td>
                     <td>{{ $c->fecha_vencimiento }}</td>
-                    <td>{{ $c->fecha_pago ?? '-' }}</td>
+                    <td>${{ number_format($c->monto_total, 2) }}</td>
+                    <td>${{ number_format($c->saldo_pendiente, 2) }}</td>
+                    <td>{{ $c->estatus }}</td>
                     <td>
-                        {{-- Semáforo visual --}}
-                        @php
-                            $color = match($c->estatus) {
-                                'Vencido' => 'danger',
-                                'Próximo a vencer' => 'warning',
-                                'En tiempo' => 'success',
-                                'Pagado' => 'secondary',
-                                default => 'light'
-                            };
-                        @endphp
-                        <span class="badge bg-{{ $color }}">{{ $c->estatus }}</span>
-                    </td>
-                    <td>{{ $c->comentarios }}</td>
-                    <td>
-                        @if($c->comprobante)
-                            <a href="{{ asset('storage/'.$c->comprobante) }}" target="_blank">Ver</a>
-                        @else
-                            -
+                        @if($c->xml)
+                        <a href="{{ Storage::url($c->xml) }}" target="_blank">Ver XML</a>
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('cuentas_por_pagar.show', $c->id) }}" class="btn btn-outline-info btn-sm" title="Ver"><i class="bi bi-eye"></i></a>
-                        <a href="{{ route('cuentas_por_pagar.edit', $c->id) }}" class="btn btn-outline-primary btn-sm" title="Editar"><i class="bi bi-pencil"></i></a>
-                        <form action="{{ route('cuentas_por_pagar.destroy', $c->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-outline-danger btn-sm" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        @if($c->pdf)
+                        <a href="{{ Storage::url($c->pdf) }}" target="_blank">Ver PDF</a>
+                        @endif
+                    </td>
+                    <td>
+                        <a href="{{ route('cuentas_por_pagar.show', $c) }}" class="btn btn-info btn-sm">Ver</a>
+                        <a href="{{ route('cuentas_por_pagar.edit', $c) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <form action="{{ route('cuentas_por_pagar.destroy', $c) }}" method="POST" style="display:inline;">
+                            @csrf @method('DELETE')
+                            <button onclick="return confirm('¿Seguro?')" class="btn btn-danger btn-sm">Eliminar</button>
                         </form>
                     </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="10" class="text-center">Sin registros.</td>
-                </tr>
-            @endforelse
+            @endforeach
             </tbody>
         </table>
-    </div>
 
-    {{-- Paginación y resumen --}}
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <div>
-            <b>Total deuda vigente:</b> ${{ number_format($total_deuda, 2) }}
-        </div>
-        <div>
-            {{ $registros->withQueryString()->links() }}
-        </div>
+        {{ $cuentas->links() }}
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{{ route('api.graficos.cuentas_por_pagar') }}')
+        .then(res => res.json())
+        .then(data => {
+            const labels = data.map(x => x.proveedor);
+            const values = data.map(x => x.total);
+
+            new Chart(document.getElementById('graficoCuentasPorPagar'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Saldo pendiente',
+                        data: values,
+                        borderWidth: 1
+                    }]
+                }
+            });
+        });
+});
+</script>
 @endsection

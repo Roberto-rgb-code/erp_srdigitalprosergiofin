@@ -4,20 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\CuentaPorPagar;
 use App\Models\Proveedor;
-use App\Models\Egreso;
-use App\Models\PagoCXP;
-use App\Models\SeguimientoCXP;
 use Illuminate\Http\Request;
-use App\Exports\CuentasPorPagarExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CuentasPorPagarExport;
 use PDF;
 
 class CuentasPorPagarController extends Controller
 {
+    // Mostrar listado con filtros y gráfico
     public function index(Request $request)
     {
         $proveedores = Proveedor::all();
-        $query = CuentaPorPagar::with(['proveedor', 'egreso', 'pagos']);
+
+        $query = CuentaPorPagar::with('proveedor');
 
         if ($request->filled('proveedor_id')) {
             $query->where('proveedor_id', $request->proveedor_id);
@@ -25,167 +24,132 @@ class CuentasPorPagarController extends Controller
         if ($request->filled('estatus')) {
             $query->where('estatus', $request->estatus);
         }
-        if ($request->filled('desde') && $request->filled('hasta')) {
-            $query->whereBetween('fecha_vencimiento', [$request->desde, $request->hasta]);
-        }
 
-        $registros = $query->orderBy('fecha_vencimiento')->paginate(20);
-        $total_deuda = CuentaPorPagar::where('saldo', '>', 0)->sum('saldo');
+        $cuentas = $query->orderByDesc('id')->paginate(15);
 
-        return view('cuentas_por_pagar.index', compact('registros', 'proveedores', 'total_deuda'));
+        $totalDeuda = CuentaPorPagar::sum('saldo_pendiente');
+
+        return view('cuentas_por_pagar.index', compact('cuentas', 'proveedores', 'totalDeuda'));
     }
 
+    // Mostrar formulario de creación
     public function create()
     {
         $proveedores = Proveedor::all();
-        $egresos = Egreso::all();
-        return view('cuentas_por_pagar.create', compact('proveedores', 'egresos'));
+        return view('cuentas_por_pagar.create', compact('proveedores'));
     }
 
+    // Guardar nueva cuenta por pagar
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'proveedor_id' => 'required|integer|exists:proveedores,id',
-            'egreso_id' => 'nullable|integer|exists:egresos,id',
-            'factura' => 'nullable|string|max:100',
-            'monto' => 'required|numeric|min:0',
-            'saldo' => 'required|numeric|min:0',
+        $request->validate([
+            'proveedor_id'      => 'required|exists:proveedores,id',
+            'folio_factura'     => 'required|string|max:60',
+            'fecha_emision'     => 'required|date',
             'fecha_vencimiento' => 'required|date',
-            'fecha_pago' => 'nullable|date',
-            'estatus' => 'required|string|max:20',
-            'comprobante' => 'nullable|file|mimes:pdf,xml,jpg,png',
-            'comentarios' => 'nullable|string',
+            'monto_total'       => 'required|numeric',
+            'saldo_pendiente'   => 'required|numeric',
+            'estatus'           => 'required|string|max:30',
+            'xml'               => 'nullable|file|mimes:xml|max:2048',
+            'pdf'               => 'nullable|file|mimes:pdf|max:2048',
         ]);
 
-        if ($request->hasFile('comprobante')) {
-            $data['comprobante'] = $request->file('comprobante')->store('comprobantes_cxp', 'public');
+        $data = $request->except(['xml', 'pdf']);
+
+        if ($request->hasFile('xml')) {
+            $data['xml'] = $request->file('xml')->store('xml_cuentas_pagar', 'public');
+        }
+        if ($request->hasFile('pdf')) {
+            $data['pdf'] = $request->file('pdf')->store('pdf_cuentas_pagar', 'public');
         }
 
         CuentaPorPagar::create($data);
-        return redirect()->route('cuentas_por_pagar.index')->with('success', 'Registro de CxP creado');
+
+        return redirect()->route('cuentas_por_pagar.index')->with('success', 'Cuenta por pagar registrada');
     }
 
+    // Ver detalle de una cuenta
     public function show(CuentaPorPagar $cuentas_por_pagar)
     {
-        $cuenta = $cuentas_por_pagar->load(['proveedor', 'egreso', 'pagos', 'seguimientos.usuario']);
-        $total_pagado = $cuenta->pagos->sum('monto');
-        $porcentaje_impacto = $cuenta->impacto_porcentaje;
-        return view('cuentas_por_pagar.show', compact('cuenta', 'total_pagado', 'porcentaje_impacto'));
+        $proveedores = Proveedor::all();
+        return view('cuentas_por_pagar.show', [
+            'cuenta' => $cuentas_por_pagar,
+            'proveedores' => $proveedores,
+        ]);
     }
 
+    // Editar cuenta por pagar
     public function edit(CuentaPorPagar $cuentas_por_pagar)
     {
         $proveedores = Proveedor::all();
-        $egresos = Egreso::all();
-        return view('cuentas_por_pagar.edit', [
-            'registro' => $cuentas_por_pagar,
-            'proveedores' => $proveedores,
-            'egresos' => $egresos
-        ]);
+        return view('cuentas_por_pagar.edit', compact('cuentas_por_pagar', 'proveedores'));
     }
 
+    // Actualizar cuenta por pagar
     public function update(Request $request, CuentaPorPagar $cuentas_por_pagar)
     {
-        $data = $request->validate([
-            'proveedor_id' => 'required|integer|exists:proveedores,id',
-            'egreso_id' => 'nullable|integer|exists:egresos,id',
-            'factura' => 'nullable|string|max:100',
-            'monto' => 'required|numeric|min:0',
-            'saldo' => 'required|numeric|min:0',
+        $request->validate([
+            'proveedor_id'      => 'required|exists:proveedores,id',
+            'folio_factura'     => 'required|string|max:60',
+            'fecha_emision'     => 'required|date',
             'fecha_vencimiento' => 'required|date',
-            'fecha_pago' => 'nullable|date',
-            'estatus' => 'required|string|max:20',
-            'comprobante' => 'nullable|file|mimes:pdf,xml,jpg,png',
-            'comentarios' => 'nullable|string',
+            'monto_total'       => 'required|numeric',
+            'saldo_pendiente'   => 'required|numeric',
+            'estatus'           => 'required|string|max:30',
+            'xml'               => 'nullable|file|mimes:xml|max:2048',
+            'pdf'               => 'nullable|file|mimes:pdf|max:2048',
         ]);
-        if ($request->hasFile('comprobante')) {
-            $data['comprobante'] = $request->file('comprobante')->store('comprobantes_cxp', 'public');
+
+        $data = $request->except(['xml', 'pdf']);
+
+        if ($request->hasFile('xml')) {
+            $data['xml'] = $request->file('xml')->store('xml_cuentas_pagar', 'public');
         }
+        if ($request->hasFile('pdf')) {
+            $data['pdf'] = $request->file('pdf')->store('pdf_cuentas_pagar', 'public');
+        }
+
         $cuentas_por_pagar->update($data);
-        return redirect()->route('cuentas_por_pagar.index')->with('success', 'Registro actualizado');
+
+        return redirect()->route('cuentas_por_pagar.index')->with('success', 'Cuenta por pagar actualizada');
     }
 
+    // Eliminar cuenta por pagar
     public function destroy(CuentaPorPagar $cuentas_por_pagar)
     {
         $cuentas_por_pagar->delete();
-        return redirect()->route('cuentas_por_pagar.index')->with('success', 'Registro eliminado');
+        return redirect()->route('cuentas_por_pagar.index')->with('success', 'Cuenta por pagar eliminada');
     }
 
-    // ---------- REGISTRAR PAGO (total o parcial) ----------
-    public function registrarPago(Request $request, $id)
+    // ---------- EXPORTS Y GRÁFICO -----------
+
+    public function exportExcel()
     {
-        $cuenta = CuentaPorPagar::findOrFail($id);
-
-        $request->validate([
-            'monto' => 'required|numeric|min:1',
-            'fecha' => 'required|date',
-            'tipo' => 'required|string',
-            'comentarios' => 'nullable|string',
-            'comprobante' => 'nullable|file|mimes:pdf,jpg,png'
-        ]);
-
-        $monto = min($request->monto, $cuenta->saldo);
-
-        if ($request->hasFile('comprobante')) {
-            $comprobantePath = $request->file('comprobante')->store('comprobantes_pagos_cxp', 'public');
-        } else {
-            $comprobantePath = null;
-        }
-
-        $cuenta->pagos()->create([
-            'monto' => $monto,
-            'fecha' => $request->fecha,
-            'tipo' => $request->tipo,
-            'comentarios' => $request->comentarios,
-            'comprobante' => $comprobantePath,
-        ]);
-
-        // Actualiza saldo
-        $cuenta->saldo -= $monto;
-        if ($cuenta->saldo <= 0) {
-            $cuenta->saldo = 0;
-            $cuenta->estatus = 'Pagado';
-            $cuenta->fecha_pago = $request->fecha;
-        }
-        $cuenta->save();
-
-        return redirect()->route('cuentas_por_pagar.show', $cuenta->id)
-            ->with('success', 'Pago registrado correctamente.');
+        return Excel::download(new CuentasPorPagarExport, 'cuentas_por_pagar.xlsx');
     }
 
-    // ---------- REGISTRAR SEGUIMIENTO ----------
-    public function registrarSeguimiento(Request $request, $id)
-    {
-        $cuenta = CuentaPorPagar::findOrFail($id);
-
-        $request->validate([
-            'tipo' => 'required|string',
-            'descripcion' => 'required|string',
-        ]);
-
-        $cuenta->seguimientos()->create([
-            'usuario_id' => auth()->id(),
-            'tipo' => $request->tipo,
-            'descripcion' => $request->descripcion,
-            'fecha' => now(),
-        ]);
-
-        return redirect()->route('cuentas_por_pagar.show', $cuenta->id)
-            ->with('success', 'Seguimiento registrado correctamente.');
-    }
-
-
-    // Exportar Excel
-public function exportExcel()
+    public function exportPDF()
 {
-    return Excel::download(new CuentasPorPagarExport, 'cuentas_por_pagar.xlsx');
-}
-
-// Exportar PDF
-public function exportPDF()
-{
-    $registros = \App\Models\CuentaPorPagar::with('proveedor')->get();
+    $registros = CuentaPorPagar::with('proveedor')->get();
     $pdf = PDF::loadView('cuentas_por_pagar.export_pdf', compact('registros'));
     return $pdf->download('cuentas_por_pagar.pdf');
 }
+
+
+    // API para gráfico (por proveedor)
+    public function apiGrafico()
+    {
+        $data = CuentaPorPagar::with('proveedor')
+            ->selectRaw('proveedor_id, SUM(saldo_pendiente) as total')
+            ->groupBy('proveedor_id')
+            ->get()
+            ->map(function($item){
+                return [
+                    'proveedor' => $item->proveedor->nombre ?? 'Sin proveedor',
+                    'total'     => $item->total,
+                ];
+            });
+
+        return response()->json($data);
+    }
 }

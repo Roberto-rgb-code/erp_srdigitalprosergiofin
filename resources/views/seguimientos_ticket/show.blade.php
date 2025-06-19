@@ -1,13 +1,18 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Detalle de Seguimiento</h2>
-<table class="table">
-    <tr><th>ID</th><td>{{ $seguimientos_ticket->id }}</td></tr>
-    <tr><th>Ticket</th><td>{{ $seguimientos_ticket->ticket->folio ?? '' }}</td></tr>
-    <tr><th>Comentario</th><td>{{ $seguimientos_ticket->comentario }}</td></tr>
-    <tr><th>Usuario</th><td>{{ $seguimientos_ticket->usuario->nombre ?? '' }}</td></tr>
-    <tr><th>Visibilidad</th><td>{{ $seguimientos_ticket->visibilidad }}</td></tr>
-</table>
-<a href="{{ route('seguimientos_ticket.edit', $seguimientos_ticket) }}" class="btn btn-warning">Editar</a>
-<a href="{{ route('seguimientos_ticket.index') }}" class="btn btn-secondary">Volver</a>
+<div class="container">
+    <h2>Detalle Seguimiento de Ticket (Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b>)</h2>
+    <div class="card p-4 shadow">
+        <div><strong>ID:</strong> {{ $seguimiento->id }}</div>
+        <div><strong>Ticket:</strong> {{ $seguimiento->ticket->titulo ?? '' }}</div>
+        <div><strong>Cliente:</strong> {{ $seguimiento->cliente->nombre ?? '' }}</div>
+        <div><strong>Comentario:</strong> {{ $seguimiento->comentario }}</div>
+        <div><strong>Estatus:</strong> {{ $seguimiento->estatus }}</div>
+        <div><strong>Fecha alta:</strong> {{ $seguimiento->created_at->format('d/m/Y H:i') }}</div>
+        <div>
+            <a href="{{ route('servicios_empresariales.seguimientos_ticket.index', $servicio->id) }}" class="btn btn-secondary mt-3">Regresar</a>
+        </div>
+    </div>
+</div>
 @endsection

@@ -17,14 +17,13 @@ class DesarrolloSoftwareController extends Controller
     {
         $proyectos = DesarrolloSoftware::with(['cliente', 'tipoSoftware', 'responsable'])->paginate(10);
 
-        // Conteo por estado para gráfico
+        // Graficos y estadísticas
         $graficoEstados = DesarrolloSoftware::select('estado')
             ->selectRaw('count(*) as total')
             ->groupBy('estado')
-            ->pluck('total','estado')
+            ->pluck('total', 'estado')
             ->toArray();
 
-        // Estadísticas para dashboard (extra UX/UI)
         $totalProyectos = DesarrolloSoftware::count();
         $proyectosFinalizados = DesarrolloSoftware::where('estado', 'Finalizado')->count();
         $proyectosEnDesarrollo = DesarrolloSoftware::where('estado', 'En desarrollo')->count();
@@ -39,9 +38,9 @@ class DesarrolloSoftwareController extends Controller
 
     public function create()
     {
-        $clientes = Cliente::orderBy('nombre')->get();
-        $tipos = TipoSoftware::orderBy('nombre')->get();
-        $responsables = Empleado::orderBy('nombre')->get();
+        $clientes = Cliente::all();
+        $tipos = TipoSoftware::all();
+        $responsables = Empleado::all();
         return view('desarrollo_software.create', compact('clientes', 'tipos', 'responsables'));
     }
 
@@ -70,9 +69,9 @@ class DesarrolloSoftwareController extends Controller
 
     public function edit(DesarrolloSoftware $desarrollo_software)
     {
-        $clientes = Cliente::orderBy('nombre')->get();
-        $tipos = TipoSoftware::orderBy('nombre')->get();
-        $responsables = Empleado::orderBy('nombre')->get();
+        $clientes = Cliente::all();
+        $tipos = TipoSoftware::all();
+        $responsables = Empleado::all();
         return view('desarrollo_software.edit', compact('desarrollo_software', 'clientes', 'tipos', 'responsables'));
     }
 

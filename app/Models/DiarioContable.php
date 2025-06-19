@@ -9,19 +9,15 @@ class DiarioContable extends Model
     protected $table = 'diario_contable';
 
     protected $fillable = [
-        'poliza_id',
-        'cuenta_contable_id',
-        'debe',
-        'haber',
-        'fecha'
+        'poliza_contable_id', 'cuenta_contable_id', 'fecha', 'concepto', 'debe', 'haber', 'referencia'
     ];
 
     public function poliza()
     {
-        return $this->belongsTo(PolizaContable::class, 'poliza_id');
+        return $this->belongsTo(PolizaContable::class, 'poliza_contable_id');
     }
 
-    public function cuenta()
+    public function cuentaContable()
     {
         return $this->belongsTo(CuentaContable::class, 'cuenta_contable_id');
     }

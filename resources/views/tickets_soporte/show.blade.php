@@ -1,17 +1,18 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Detalle de Ticket de Soporte</h2>
-<table class="table">
-    <tr><th>Folio</th><td>{{ $tickets_soporte->folio }}</td></tr>
-    <tr><th>Cliente</th><td>{{ $tickets_soporte->cliente->nombre ?? '' }}</td></tr>
-    <tr><th>Poliza</th><td>{{ $tickets_soporte->poliza->tipo ?? '' }}</td></tr>
-    <tr><th>Asunto</th><td>{{ $tickets_soporte->asunto }}</td></tr>
-    <tr><th>Descripción</th><td>{{ $tickets_soporte->descripcion }}</td></tr>
-    <tr><th>Equipo</th><td>{{ $tickets_soporte->equipo->nombre_equipo ?? '' }}</td></tr>
-    <tr><th>Responsable</th><td>{{ $tickets_soporte->responsable->nombre ?? '' }}</td></tr>
-    <tr><th>Prioridad</th><td>{{ $tickets_soporte->prioridad }}</td></tr>
-    <tr><th>Estado</th><td>{{ $tickets_soporte->estado }}</td></tr>
-</table>
-<a href="{{ route('tickets_soporte.edit', $tickets_soporte) }}" class="btn btn-warning">Editar</a>
-<a href="{{ route('tickets_soporte.index') }}" class="btn btn-secondary">Volver</a>
+<div class="container">
+    <h2>Detalle Ticket (Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b>)</h2>
+    <div class="card p-4 shadow">
+        <div><strong>ID:</strong> {{ $ticket->id }}</div>
+        <div><strong>Cliente:</strong> {{ $ticket->cliente->nombre ?? '' }}</div>
+        <div><strong>Título:</strong> {{ $ticket->titulo }}</div>
+        <div><strong>Descripción:</strong> {{ $ticket->descripcion }}</div>
+        <div><strong>Estatus:</strong> {{ $ticket->estatus }}</div>
+        <div><strong>Fecha alta:</strong> {{ $ticket->created_at->format('d/m/Y H:i') }}</div>
+        <div>
+            <a href="{{ route('servicios_empresariales.tickets_soporte.index', $servicio->id) }}" class="btn btn-secondary mt-3">Regresar</a>
+        </div>
+    </div>
+</div>
 @endsection

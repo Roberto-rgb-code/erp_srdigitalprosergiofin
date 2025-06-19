@@ -3,24 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\CuentaPorCobrar;
-use App\Models\Cobro;
-use App\Models\SeguimientoCobro;
 use App\Models\Cliente;
 use App\Models\Venta;
 use Illuminate\Http\Request;
+
+// Exportadores
+use App\Exports\CuentasPorCobrarExport;
+use Maatwebsite\Excel\Facades\Excel;
+use PDF;
 
 class CuentasPorCobrarController extends Controller
 {
     public function index(Request $request)
     {
-        $registros = CuentaPorCobrar::with(['cliente', 'venta', 'cobros'])
+        $clientes = Cliente::all();
+        $cuentas = CuentaPorCobrar::with(['cliente', 'venta'])
+            ->when($request->cliente_id, fn($q) => $q->where('cliente_id', $request->cliente_id))
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate(15);
 
-        $total_deuda = CuentaPorCobrar::sum('saldo');
-        $clientesCredito = Cliente::where('limite_credito', '>', 0)->get();
+        $totalDeuda = CuentaPorCobrar::sum('saldo_pendiente');
 
-        return view('cuentas_por_cobrar.index', compact('registros', 'total_deuda', 'clientesCredito'));
+        return view('cuentas_por_cobrar.index', compact('cuentas', 'clientes', 'totalDeuda'));
     }
 
     public function create()
@@ -32,127 +36,80 @@ class CuentasPorCobrarController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'cliente_id' => 'required|integer|exists:clientes,id',
-            'venta_id' => 'required|integer|exists:ventas,id',
-            'monto' => 'required|numeric|min:0',
-            'saldo' => 'required|numeric|min:0',
+        $request->validate([
+            'cliente_id'        => 'required|exists:clientes,id',
+            'venta_id'          => 'nullable|exists:ventas,id',
+            'folio_factura'     => 'required|string|max:60',
+            'fecha_emision'     => 'required|date',
             'fecha_vencimiento' => 'required|date',
-            'fecha_pago' => 'nullable|date',
-            'estatus' => 'required|string|max:20',
-            'comentarios' => 'nullable|string',
+            'monto_total'       => 'required|numeric',
+            'saldo_pendiente'   => 'required|numeric',
+            'documento'         => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
+
+        $data = $request->except('documento');
+        if ($request->hasFile('documento')) {
+            $data['documento'] = $request->file('documento')->store('documentos_cobrar', 'public');
+        }
+
         CuentaPorCobrar::create($data);
-        return redirect()->route('cuentas_por_cobrar.index')->with('success', 'Registro de CxC creado');
+
+        return redirect()->route('cuentas_por_cobrar.index')->with('success', 'Cuenta registrada');
     }
 
     public function show(CuentaPorCobrar $cuentas_por_cobrar)
     {
-        $cuenta = $cuentas_por_cobrar->load(['cliente', 'venta', 'cobros', 'seguimientos.usuario']);
-        $total_cobrado = $cuenta->cobros->sum('monto');
-        $porcentaje_impacto = $cuenta->impacto_porcentaje; // del accesor de modelo
-        return view('cuentas_por_cobrar.show', compact('cuenta', 'total_cobrado', 'porcentaje_impacto'));
+        $cuentas_por_cobrar->load(['cliente', 'venta']);
+        return view('cuentas_por_cobrar.show', ['cuenta' => $cuentas_por_cobrar]);
     }
 
     public function edit(CuentaPorCobrar $cuentas_por_cobrar)
     {
         $clientes = Cliente::all();
         $ventas = Venta::all();
-        return view('cuentas_por_cobrar.edit', [
-            'registro' => $cuentas_por_cobrar,
-            'clientes' => $clientes,
-            'ventas' => $ventas
-        ]);
+        return view('cuentas_por_cobrar.edit', compact('cuentas_por_cobrar', 'clientes', 'ventas'));
     }
 
     public function update(Request $request, CuentaPorCobrar $cuentas_por_cobrar)
     {
-        $data = $request->validate([
-            'cliente_id' => 'required|integer|exists:clientes,id',
-            'venta_id' => 'required|integer|exists:ventas,id',
-            'monto' => 'required|numeric|min:0',
-            'saldo' => 'required|numeric|min:0',
+        $request->validate([
+            'cliente_id'        => 'required|exists:clientes,id',
+            'venta_id'          => 'nullable|exists:ventas,id',
+            'folio_factura'     => 'required|string|max:60',
+            'fecha_emision'     => 'required|date',
             'fecha_vencimiento' => 'required|date',
-            'fecha_pago' => 'nullable|date',
-            'estatus' => 'required|string|max:20',
-            'comentarios' => 'nullable|string',
+            'monto_total'       => 'required|numeric',
+            'saldo_pendiente'   => 'required|numeric',
+            'documento'         => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
+
+        $data = $request->except('documento');
+        if ($request->hasFile('documento')) {
+            $data['documento'] = $request->file('documento')->store('documentos_cobrar', 'public');
+        }
+
         $cuentas_por_cobrar->update($data);
-        return redirect()->route('cuentas_por_cobrar.index')->with('success', 'Registro actualizado');
+
+        return redirect()->route('cuentas_por_cobrar.index')->with('success', 'Cuenta actualizada');
     }
 
     public function destroy(CuentaPorCobrar $cuentas_por_cobrar)
     {
         $cuentas_por_cobrar->delete();
-        return redirect()->route('cuentas_por_cobrar.index')->with('success', 'Registro eliminado');
+        return redirect()->route('cuentas_por_cobrar.index')->with('success', 'Cuenta eliminada');
     }
 
-    // ----------- NUEVO: REGISTRAR COBRO (PAGO) -----------
-    public function registrarCobro(Request $request, $id)
-    {
-        $cuenta = CuentaPorCobrar::findOrFail($id);
-
-        $request->validate([
-            'monto' => 'required|numeric|min:1',
-            'fecha' => 'required|date',
-            'tipo' => 'required|string',
-            'comentarios' => 'nullable|string',
-        ]);
-
-        $monto = min($request->monto, $cuenta->saldo); // Evita pagos de más
-
-        $cobro = $cuenta->cobros()->create([
-            'monto' => $monto,
-            'fecha' => $request->fecha,
-            'tipo' => $request->tipo,
-            'comentarios' => $request->comentarios,
-            'recibo' => $request->recibo ?? null,
-        ]);
-
-        // Actualiza saldo
-        $cuenta->saldo -= $monto;
-        if ($cuenta->saldo <= 0) {
-            $cuenta->saldo = 0;
-            $cuenta->estatus = 'Pagado';
-            $cuenta->fecha_pago = $request->fecha;
-        }
-        $cuenta->save();
-
-        return redirect()->route('cuentas_por_cobrar.show', $cuenta->id)
-            ->with('success', 'Cobro registrado correctamente.');
-    }
-
-    // ----------- NUEVO: REGISTRAR SEGUIMIENTO -----------
-    public function registrarSeguimiento(Request $request, $id)
-    {
-        $cuenta = CuentaPorCobrar::findOrFail($id);
-
-        $request->validate([
-            'tipo' => 'required|string',
-            'descripcion' => 'required|string',
-        ]);
-
-        $cuenta->seguimientos()->create([
-            'usuario_id' => auth()->id(),
-            'tipo' => $request->tipo,
-            'descripcion' => $request->descripcion,
-            'fecha' => now(),
-        ]);
-
-        return redirect()->route('cuentas_por_cobrar.show', $cuenta->id)
-            ->with('success', 'Seguimiento registrado correctamente.');
-    }
-
-    // ----------- (OPCIONAL) EXPORTACIÓN -----------
+    // --------- Exportar a Excel ----------
     public function exportExcel()
     {
-        return \Excel::download(new \App\Exports\CuentasPorCobrarExport, 'cuentas_por_cobrar.xlsx');
+        return Excel::download(new CuentasPorCobrarExport, 'cuentas_por_cobrar.xlsx');
     }
 
+    // --------- Exportar a PDF ----------
     public function exportPDF()
     {
-        $cuentas = CuentaPorCobrar::with('cliente')->get();
-        $pdf = \PDF::loadView('cuentas_por_cobrar.export_pdf', compact('cuentas'));
+        $cuentas = CuentaPorCobrar::with(['cliente', 'venta'])->get();
+        $pdf = PDF::loadView('cuentas_por_cobrar.export_pdf', compact('cuentas'));
         return $pdf->download('cuentas_por_cobrar.pdf');
     }
 }

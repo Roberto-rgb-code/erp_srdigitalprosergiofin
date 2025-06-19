@@ -1,31 +1,58 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Editar Seguimiento de Ticket</h2>
-@if($errors->any())<div class="alert alert-danger"><ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
-<form action="{{ route('seguimientos_ticket.update', $seguimientos_ticket) }}" method="POST">
-    @csrf @method('PUT')
-    <div class="mb-2"><label>Ticket:</label>
-        <select name="ticket_id" class="form-control">
-            @foreach($tickets as $t)
-                <option value="{{ $t->id }}" @if($t->id == $seguimientos_ticket->ticket_id) selected @endif>{{ $t->folio }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="mb-2"><label>Comentario:</label><textarea name="comentario" class="form-control">{{ $seguimientos_ticket->comentario }}</textarea></div>
-    <div class="mb-2"><label>Usuario:</label>
-        <select name="usuario_id" class="form-control">
-            @foreach($usuarios as $u)
-                <option value="{{ $u->id }}" @if($u->id == $seguimientos_ticket->usuario_id) selected @endif>{{ $u->nombre }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="mb-2"><label>Visibilidad:</label>
-        <select name="visibilidad" class="form-control">
-            <option @if($seguimientos_ticket->visibilidad == 'Pública') selected @endif>Pública</option>
-            <option @if($seguimientos_ticket->visibilidad == 'Interna') selected @endif>Interna</option>
-        </select>
-    </div>
-    <button class="btn btn-success">Actualizar</button>
-    <a href="{{ route('seguimientos_ticket.index') }}" class="btn btn-secondary">Volver</a>
-</form>
+<div class="container">
+    <h2>Editar Seguimiento de Ticket (Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b>)</h2>
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('servicios_empresariales.seguimientos_ticket.update', [$servicio->id, $seguimiento->id]) }}" method="POST" class="card p-4 shadow">
+        @csrf
+        @method('PUT')
+
+        <div class="mb-3">
+            <label for="ticket_soporte_id" class="form-label">Ticket</label>
+            <select name="ticket_soporte_id" id="ticket_soporte_id" class="form-select" required>
+                <option value="">-- Selecciona --</option>
+                @foreach ($tickets as $ticket)
+                    <option value="{{ $ticket->id }}" {{ old('ticket_soporte_id', $seguimiento->ticket_soporte_id) == $ticket->id ? 'selected' : '' }}>
+                        {{ $ticket->titulo }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="cliente_id" class="form-label">Cliente</label>
+            <select name="cliente_id" id="cliente_id" class="form-select" required>
+                <option value="">-- Selecciona --</option>
+                @foreach ($clientes as $cliente)
+                    <option value="{{ $cliente->id }}" {{ old('cliente_id', $seguimiento->cliente_id) == $cliente->id ? 'selected' : '' }}>
+                        {{ $cliente->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="comentario" class="form-label">Comentario</label>
+            <textarea name="comentario" id="comentario" class="form-control">{{ old('comentario', $seguimiento->comentario) }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="estatus" class="form-label">Estatus</label>
+            <select name="estatus" id="estatus" class="form-select" required>
+                <option value="En revisión" {{ old('estatus', $seguimiento->estatus) == 'En revisión' ? 'selected' : '' }}>En revisión</option>
+                <option value="En proceso" {{ old('estatus', $seguimiento->estatus) == 'En proceso' ? 'selected' : '' }}>En proceso</option>
+                <option value="Solucionado" {{ old('estatus', $seguimiento->estatus) == 'Solucionado' ? 'selected' : '' }}>Solucionado</option>
+            </select>
+        </div>
+        <button class="btn btn-primary">Actualizar</button>
+        <a href="{{ route('servicios_empresariales.seguimientos_ticket.index', $servicio->id) }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
 @endsection

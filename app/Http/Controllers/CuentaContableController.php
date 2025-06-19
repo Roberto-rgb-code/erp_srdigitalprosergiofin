@@ -9,7 +9,7 @@ class CuentaContableController extends Controller
 {
     public function index()
     {
-        $cuentas = CuentaContable::orderBy('codigo')->paginate(20);
+        $cuentas = CuentaContable::with('cuentaPadre')->paginate(15);
         return view('cuentas_contables.index', compact('cuentas'));
     }
 
@@ -21,40 +21,33 @@ class CuentaContableController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'codigo'    => 'required|string|max:30|unique:cuentas_contables,codigo',
-            'nombre'    => 'required|string|max:80',
-            'tipo'      => 'required|string|max:30',
-            'nivel'     => 'required|integer',
-            'status'    => 'required|string|max:20',
-            'padre_id'  => 'nullable|integer|exists:cuentas_contables,id',
+        $request->validate([
+            'codigo' => 'required|unique:cuentas_contables,codigo',
+            'nombre' => 'required',
+            'tipo'   => 'required',
         ]);
-        CuentaContable::create($data);
-        return redirect()->route('cuentas_contables.index')->with('success', 'Cuenta registrada');
-    }
 
-    public function show(CuentaContable $cuentas_contable)
-    {
-        return view('cuentas_contables.show', ['cuenta' => $cuentas_contable]);
+        CuentaContable::create($request->all());
+
+        return redirect()->route('cuentas_contables.index')->with('success', 'Cuenta registrada');
     }
 
     public function edit(CuentaContable $cuentas_contable)
     {
-        $padres = CuentaContable::where('id', '!=', $cuentas_contable->id)->get();
-        return view('cuentas_contables.edit', ['cuenta' => $cuentas_contable, 'padres' => $padres]);
+        $padres = CuentaContable::all();
+        return view('cuentas_contables.edit', compact('cuentas_contable', 'padres'));
     }
 
     public function update(Request $request, CuentaContable $cuentas_contable)
     {
-        $data = $request->validate([
-            'codigo'    => 'required|string|max:30|unique:cuentas_contables,codigo,' . $cuentas_contable->id,
-            'nombre'    => 'required|string|max:80',
-            'tipo'      => 'required|string|max:30',
-            'nivel'     => 'required|integer',
-            'status'    => 'required|string|max:20',
-            'padre_id'  => 'nullable|integer|exists:cuentas_contables,id',
+        $request->validate([
+            'codigo' => 'required|unique:cuentas_contables,codigo,' . $cuentas_contable->id,
+            'nombre' => 'required',
+            'tipo'   => 'required',
         ]);
-        $cuentas_contable->update($data);
+
+        $cuentas_contable->update($request->all());
+
         return redirect()->route('cuentas_contables.index')->with('success', 'Cuenta actualizada');
     }
 

@@ -1,14 +1,18 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Detalle de Usuario del Cliente</h2>
-<table class="table">
-    <tr><th>ID</th><td>{{ $usuarios_cliente->id }}</td></tr>
-    <tr><th>Cliente</th><td>{{ $usuarios_cliente->cliente->nombre ?? '' }}</td></tr>
-    <tr><th>Nombre</th><td>{{ $usuarios_cliente->nombre }}</td></tr>
-    <tr><th>Rol</th><td>{{ $usuarios_cliente->rol }}</td></tr>
-    <tr><th>Usuario</th><td>{{ $usuarios_cliente->usuario }}</td></tr>
-    <tr><th>Contraseña</th><td>******</td></tr>
-</table>
-<a href="{{ route('usuarios_clientes.edit', $usuarios_cliente) }}" class="btn btn-warning">Editar</a>
-<a href="{{ route('usuarios_clientes.index') }}" class="btn btn-secondary">Volver</a>
+<div class="container">
+    <h2>Detalle Usuario (Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b>)</h2>
+    <div class="card p-4 shadow">
+        <div><strong>ID:</strong> {{ $usuario->id }}</div>
+        <div><strong>Cliente:</strong> {{ $usuario->cliente->nombre ?? '' }}</div>
+        <div><strong>Nombre:</strong> {{ $usuario->nombre }}</div>
+        <div><strong>Rol:</strong> {{ $usuario->rol }}</div>
+        <div><strong>Usuario:</strong> {{ $usuario->usuario }}</div>
+        <div><strong>Fecha alta:</strong> {{ $usuario->created_at->format('d/m/Y H:i') }}</div>
+        <div>
+            <a href="{{ route('servicios_empresariales.usuarios_clientes.index', $servicio->id) }}" class="btn btn-secondary mt-3">Regresar</a>
+        </div>
+    </div>
+</div>
 @endsection

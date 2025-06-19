@@ -4,90 +4,93 @@ namespace App\Http\Controllers;
 
 use App\Models\TicketSoporte;
 use App\Models\Cliente;
-use App\Models\PolizaServicio;
-use App\Models\InventarioCliente;
-use App\Models\Empleado;
+use App\Models\ServicioEmpresarial;
 use Illuminate\Http\Request;
 
 class TicketSoporteController extends Controller
 {
-    public function index()
+    public function index($servicios_empresariales)
     {
-        $tickets = TicketSoporte::with(['cliente', 'poliza', 'equipo', 'responsable'])->orderByDesc('id')->get();
-        return view('tickets_soporte.index', compact('tickets'));
+        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
+        $tickets = TicketSoporte::with('cliente')
+            ->where('servicio_empresarial_id', $servicio->id)
+            ->orderByDesc('id')
+            ->get();
+
+        return view('tickets_soporte.index', compact('tickets', 'servicio'));
     }
 
-    public function create()
-{
-    $clientes = \App\Models\Cliente::all();
-    $polizas = \App\Models\PolizaServicio::all();
-    $equipos = \App\Models\InventarioCliente::all();
-    $empleados = \App\Models\Empleado::all();
-    return view('tickets_soporte.create', compact('clientes', 'polizas', 'equipos', 'empleados'));
-}
-
-    public function store(Request $request)
+    public function create($servicios_empresariales)
     {
+        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
+        $clientes = Cliente::all();
+        return view('tickets_soporte.create', compact('clientes', 'servicio'));
+    }
+
+    public function store(Request $request, $servicios_empresariales)
+    {
+        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
+
         $request->validate([
-            'folio' => 'nullable|string|max:30|unique:tickets_soporte,folio',
             'cliente_id' => 'required|exists:clientes,id',
-            'poliza_id' => 'nullable|exists:polizas_servicio,id',
-            'asunto' => 'required|string|max:100',
-            'descripcion' => 'nullable|string',
-            'equipo_id' => 'nullable|exists:inventario_clientes,id',
-            'usuario_id' => 'nullable|integer',
-            'responsable_id' => 'nullable|exists:empleados,id',
-            'prioridad' => 'nullable|string|max:30',
-            'estado' => 'nullable|string|max:30',
+            'titulo'     => 'required|string|max:100',
+            'descripcion'=> 'nullable|string',
+            'estatus'    => 'required|string|max:30',
         ]);
-
-        $data = $request->all();
-        // Folio autogenerado si no se proporciona:
-        if (empty($data['folio'])) {
-            $data['folio'] = 'TK-' . (TicketSoporte::max('id') + 1);
-        }
-        TicketSoporte::create($data);
-
-        return redirect()->route('tickets_soporte.index')->with('success', 'Ticket registrado');
+        TicketSoporte::create([
+            'servicio_empresarial_id' => $servicio->id,
+            'cliente_id'  => $request->cliente_id,
+            'titulo'      => $request->titulo,
+            'descripcion' => $request->descripcion,
+            'estatus'     => $request->estatus,
+        ]);
+        return redirect()->route('servicios_empresariales.tickets_soporte.index', $servicio->id)
+            ->with('success', 'Ticket creado correctamente');
     }
 
-    public function show(TicketSoporte $tickets_soporte)
+    public function show($servicios_empresariales, $id)
     {
-        $tickets_soporte->load(['cliente', 'poliza', 'equipo', 'responsable', 'seguimientos']);
-        return view('tickets_soporte.show', compact('tickets_soporte'));
+        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
+        $ticket = TicketSoporte::with('cliente')
+            ->where('servicio_empresarial_id', $servicio->id)
+            ->findOrFail($id);
+        return view('tickets_soporte.show', compact('ticket', 'servicio'));
     }
 
-    public function edit($id)
-{
-    $tickets_soporte = \App\Models\TicketsSoporte::findOrFail($id);
-    $clientes = \App\Models\Cliente::all();
-    $polizas = \App\Models\PolizaServicio::all();
-    $equipos = \App\Models\InventarioCliente::all();
-    $empleados = \App\Models\Empleado::all();
-    return view('tickets_soporte.edit', compact('tickets_soporte', 'clientes', 'polizas', 'equipos', 'empleados'));
-}
-
-    public function update(Request $request, TicketSoporte $tickets_soporte)
+    public function edit($servicios_empresariales, $id)
     {
+        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
+        $ticket = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
+        $clientes = Cliente::all();
+        return view('tickets_soporte.edit', compact('ticket', 'clientes', 'servicio'));
+    }
+
+    public function update(Request $request, $servicios_empresariales, $id)
+    {
+        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
+        $ticket = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
         $request->validate([
-            'folio' => 'nullable|string|max:30|unique:tickets_soporte,folio,' . $tickets_soporte->id,
             'cliente_id' => 'required|exists:clientes,id',
-            'poliza_id' => 'nullable|exists:polizas_servicio,id',
-            'asunto' => 'required|string|max:100',
-            'descripcion' => 'nullable|string',
-            'equipo_id' => 'nullable|exists:inventario_clientes,id',
-            'usuario_id' => 'nullable|integer',
-            'responsable_id' => 'nullable|exists:empleados,id',
-            'prioridad' => 'nullable|string|max:30',
-            'estado' => 'nullable|string|max:30',
+            'titulo'     => 'required|string|max:100',
+            'descripcion'=> 'nullable|string',
+            'estatus'    => 'required|string|max:30',
         ]);
-        $tickets_soporte->update($request->all());
-        return redirect()->route('tickets_soporte.index')->with('success', 'Ticket actualizado');
+        $ticket->update([
+            'cliente_id'  => $request->cliente_id,
+            'titulo'      => $request->titulo,
+            'descripcion' => $request->descripcion,
+            'estatus'     => $request->estatus,
+        ]);
+        return redirect()->route('servicios_empresariales.tickets_soporte.index', $servicio->id)
+            ->with('success', 'Ticket actualizado');
     }
 
-    public function destroy(TicketSoporte $tickets_soporte)
+    public function destroy($servicios_empresariales, $id)
     {
-        $tickets_soporte->delete();
-        return redirect()->route('tickets_soporte.index')->with('success', 'Ticket eliminado');
+        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
+        $ticket = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
+        $ticket->delete();
+        return redirect()->route('servicios_empresariales.tickets_soporte.index', $servicio->id)
+            ->with('success', 'Ticket eliminado');
     }
 }

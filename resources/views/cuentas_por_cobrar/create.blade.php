@@ -1,59 +1,63 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Nueva Cuenta por Cobrar</h2>
-<form method="POST" action="{{ route('cuentas_por_cobrar.store') }}">
-    @csrf
-    <div class="mb-2">
-        <label>Cliente</label>
-        <select name="cliente_id" class="form-select" required>
-            <option value="">-- Selecciona --</option>
-            @foreach($clientes as $c)
-            <option value="{{ $c->id }}" @selected(old('cliente_id') == $c->id)>
-                {{ $c->nombre }}
-            </option>
+<div class="container">
+    <h2 class="mb-4">Registrar Cuenta por Cobrar</h2>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+            @foreach($errors->all() as $e)
+                <li>{{ $e }}</li>
             @endforeach
-        </select>
-    </div>
-    <div class="mb-2">
-        <label>Venta</label>
-        <select name="venta_id" class="form-select">
-            <option value="">-- Selecciona --</option>
-            @foreach($ventas as $v)
-            <option value="{{ $v->id }}" @selected(old('venta_id') == $v->id)>
-                {{ $v->id }}
-            </option>
-            @endforeach
-        </select>
-    </div>
-    <div class="mb-2">
-        <label>Monto</label>
-        <input type="number" step="0.01" name="monto" class="form-control" value="{{ old('monto') }}" required>
-    </div>
-    <div class="mb-2">
-        <label>Saldo</label>
-        <input type="number" step="0.01" name="saldo" class="form-control" value="{{ old('saldo') }}">
-    </div>
-    <div class="mb-2">
-        <label>Fecha de vencimiento</label>
-        <input type="date" name="fecha_vencimiento" class="form-control" value="{{ old('fecha_vencimiento') }}">
-    </div>
-    <div class="mb-2">
-        <label>Fecha de pago</label>
-        <input type="date" name="fecha_pago" class="form-control" value="{{ old('fecha_pago') }}">
-    </div>
-    <div class="mb-2">
-        <label>Estatus</label>
-        <select name="estatus" class="form-select">
-            <option value="Pendiente" @selected(old('estatus')=='Pendiente')>Pendiente</option>
-            <option value="Pagada" @selected(old('estatus')=='Pagada')>Pagada</option>
-            <option value="Vencida" @selected(old('estatus')=='Vencida')>Vencida</option>
-        </select>
-    </div>
-    <div class="mb-2">
-        <label>Comentarios</label>
-        <textarea name="comentarios" class="form-control">{{ old('comentarios') }}</textarea>
-    </div>
-    <button class="btn btn-success">Guardar</button>
-    <a href="{{ route('cuentas_por_cobrar.index') }}" class="btn btn-secondary">Volver</a>
-</form>
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('cuentas_por_cobrar.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+
+        <div class="mb-3">
+            <label for="cliente_id" class="form-label">Cliente</label>
+            <select name="cliente_id" id="cliente_id" class="form-select" required>
+                <option value="">-- Selecciona cliente --</option>
+                @foreach($clientes as $c)
+                    <option value="{{ $c->id }}" {{ old('cliente_id') == $c->id ? 'selected' : '' }}>{{ $c->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="folio_factura" class="form-label">Folio Factura</label>
+            <input type="text" name="folio_factura" class="form-control" value="{{ old('folio_factura') }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="fecha_emision" class="form-label">Fecha de Emisión</label>
+            <input type="date" name="fecha_emision" class="form-control" value="{{ old('fecha_emision') }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="fecha_vencimiento" class="form-label">Fecha de Vencimiento</label>
+            <input type="date" name="fecha_vencimiento" class="form-control" value="{{ old('fecha_vencimiento') }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="monto_total" class="form-label">Monto Total</label>
+            <input type="number" name="monto_total" step="0.01" class="form-control" value="{{ old('monto_total') }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="saldo_pendiente" class="form-label">Saldo Pendiente</label>
+            <input type="number" name="saldo_pendiente" step="0.01" class="form-control" value="{{ old('saldo_pendiente') }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="documento" class="form-label">Documento (opcional)</label>
+            <input type="file" name="documento" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{{ route('cuentas_por_cobrar.index') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
 @endsection

@@ -2,32 +2,35 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SeguimientosTicket extends Model
+class SeguimientoTicket extends Model
 {
+    use HasFactory;
+
     protected $table = 'seguimientos_ticket';
 
     protected $fillable = [
-        'ticket_id',
+        'servicio_empresarial_id',
+        'ticket_soporte_id',
+        'cliente_id',
         'comentario',
-        'usuario_id',     // Puede ser usuario interno o usuario_cliente
-        'visibilidad'     // Pública/Interna
+        'estatus'
     ];
 
-    public $timestamps = false;
-
-    // Relación con Ticket de soporte
     public function ticket()
     {
-        return $this->belongsTo(\App\Models\TicketsSoporte::class, 'ticket_id');
+        return $this->belongsTo(TicketSoporte::class, 'ticket_soporte_id');
     }
 
-    // Relación con Usuario (ajusta si tus usuarios están en usuarios_clientes o usuarios)
-    public function usuario()
+    public function cliente()
     {
-        return $this->belongsTo(\App\Models\UsuariosCliente::class, 'usuario_id');
-        // O, si manejas ambos tipos de usuario:
-        // return $this->belongsTo(\App\Models\User::class, 'usuario_id');
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function servicioEmpresarial()
+    {
+        return $this->belongsTo(ServicioEmpresarial::class, 'servicio_empresarial_id');
     }
 }

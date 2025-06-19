@@ -2,25 +2,30 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ConfiguracionesCliente extends Model
+class ConfiguracionCliente extends Model
 {
-    protected $table = 'configuraciones_clientes';
+    use HasFactory;
+
+    protected $table = 'configuracion_clientes';
 
     protected $fillable = [
+        'servicio_empresarial_id',
         'cliente_id',
+        'tipo',
         'descripcion',
-        'datos_red',
-        'ips',
-        'software'
+        'dato',
     ];
 
-    public $timestamps = false;
-
-    // Relación con Cliente
     public function cliente()
     {
-        return $this->belongsTo(\App\Models\Cliente::class, 'cliente_id');
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function servicioEmpresarial()
+    {
+        return $this->belongsTo(ServicioEmpresarial::class);
     }
 }

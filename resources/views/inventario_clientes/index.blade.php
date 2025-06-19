@@ -1,53 +1,63 @@
 @extends('layouts.app')
 
 @section('content')
-    <h2>Inventario de Equipos</h2>
-
-    {{-- Botón para crear un nuevo equipo, sólo si tienes el id del servicio empresarial --}}
-    @if(isset($servicioEmpresarial))
-        <a href="{{ route('servicios_empresariales.inventarios.create', $servicioEmpresarial->id) }}" class="btn btn-primary mb-3">Nuevo equipo</a>
-    @endif
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Inventario de Equipos de Clientes</h2>
+        <a href="{{ route('inventario_clientes.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Registro
+        </a>
+    </div>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Servicio Empresarial</th>
-                <th>Cliente</th>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Modelo</th>
-                <th>Serie</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($equipos as $e)
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
                 <tr>
-                    <td>{{ $e->id }}</td>
-                    <td>{{ $e->servicioEmpresarial->id ?? '-' }}</td>
-                    <td>{{ $e->cliente->nombre ?? '-' }}</td>
-                    <td>{{ $e->nombre_equipo }}</td>
-                    <td>{{ $e->tipo_equipo }}</td>
-                    <td>{{ $e->modelo }}</td>
-                    <td>{{ $e->serie }}</td>
-                    <td>
-                        <a href="{{ route('servicios_empresariales.inventarios.edit', [$e->servicio_empresarial_id, $e->id]) }}" class="btn btn-sm btn-warning">Editar</a>
-                        <form action="{{ route('servicios_empresariales.inventarios.destroy', [$e->servicio_empresarial_id, $e->id]) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger">Eliminar</button>
-                        </form>
-                    </td>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Equipo</th>
+                    <th>Tipo</th>
+                    <th>Modelo</th>
+                    <th>Serie</th>
+                    <th>Acciones</th>
                 </tr>
-            @endforeach
-            @if($equipos->isEmpty())
-                <tr><td colspan="8">No hay equipos registrados.</td></tr>
-            @endif
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse($equipos as $equipo)
+                    <tr>
+                        <td>{{ $equipo->id }}</td>
+                        <td>{{ $equipo->cliente->nombre ?? '-' }}</td>
+                        <td>{{ $equipo->nombre_equipo }}</td>
+                        <td>{{ $equipo->tipo_equipo }}</td>
+                        <td>{{ $equipo->modelo }}</td>
+                        <td>{{ $equipo->serie }}</td>
+                        <td>
+                            <a href="{{ route('inventario_clientes.show', $equipo) }}" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ route('inventario_clientes.edit', $equipo) }}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ route('inventario_clientes.destroy', $equipo) }}" method="POST" style="display:inline-block;">
+                                @csrf
+                                @method('DELETE')
+                                <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7">No hay equipos registrados.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection

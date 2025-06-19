@@ -1,15 +1,35 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Detalle de Equipo</h2>
-<table class="table">
-    <tr><th>ID</th><td>{{ $inventario_cliente->id }}</td></tr>
-    <tr><th>Cliente</th><td>{{ $inventario_cliente->cliente->nombre ?? '' }}</td></tr>
-    <tr><th>Nombre equipo</th><td>{{ $inventario_cliente->nombre_equipo }}</td></tr>
-    <tr><th>Tipo equipo</th><td>{{ $inventario_cliente->tipo_equipo }}</td></tr>
-    <tr><th>Modelo</th><td>{{ $inventario_cliente->modelo }}</td></tr>
-    <tr><th>Número de serie</th><td>{{ $inventario_cliente->serie }}</td></tr>
-    <tr><th>Ubicación</th><td>{{ $inventario_cliente->ubicacion }}</td></tr>
-</table>
-<a href="{{ route('inventario_clientes.edit', $inventario_cliente) }}" class="btn btn-warning">Editar</a>
-<a href="{{ route('inventario_clientes.index') }}" class="btn btn-secondary">Volver</a>
+<div class="container">
+    <h2 class="mb-4">Detalle de Equipo en Inventario</h2>
+    <div class="card shadow rounded-4 p-4">
+        <div class="mb-3">
+            <strong>ID:</strong> {{ $equipo->id }}
+        </div>
+        <div class="mb-3">
+            <strong>Cliente:</strong> {{ $equipo->cliente->nombre ?? '-' }}
+        </div>
+        <div class="mb-3">
+            <strong>Nombre del Equipo:</strong> {{ $equipo->nombre_equipo }}
+        </div>
+        <div class="mb-3">
+            <strong>Tipo de Equipo:</strong> {{ $equipo->tipo_equipo }}
+        </div>
+        <div class="mb-3">
+            <strong>Modelo:</strong> {{ $equipo->modelo }}
+        </div>
+        <div class="mb-3">
+            <strong>Serie:</strong> {{ $equipo->serie }}
+        </div>
+        <div class="mb-3">
+            <strong>Fecha de registro:</strong> {{ $equipo->created_at->format('d/m/Y H:i') }}
+        </div>
+        <div>
+            <a href="{{ route('inventario_clientes.index') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Regresar
+            </a>
+        </div>
+    </div>
+</div>
 @endsection

@@ -2,73 +2,70 @@
 
 @section('content')
 <div class="container">
-    <h2>Registrar Nueva Cuenta por Pagar</h2>
+    <h2>Nueva Cuenta por Pagar</h2>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('cuentas_por_pagar.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        <div class="mb-3">
+        <div class="mb-2">
             <label>Proveedor</label>
-            <select name="proveedor_id" class="form-control" required>
-                <option value="">Selecciona</option>
-                @foreach($proveedores as $p)
-                    <option value="{{ $p->id }}" {{ old('proveedor_id') == $p->id ? 'selected' : '' }}>{{ $p->nombre }}</option>
-                @endforeach
-            </select>
+            <input type="text" name="proveedor" class="form-control" value="{{ old('proveedor') }}" required>
         </div>
 
-        <div class="mb-3">
-            <label>Egreso relacionado</label>
-            <select name="egreso_id" class="form-control">
-                <option value="">(Opcional)</option>
-                @foreach($egresos as $e)
-                    <option value="{{ $e->id }}" {{ old('egreso_id') == $e->id ? 'selected' : '' }}>
-                        #{{ $e->id }} - {{ $e->descripcion ?? '' }}
-                    </option>
-                @endforeach
-            </select>
+        <div class="mb-2">
+            <label>Folio factura</label>
+            <input type="text" name="folio_factura" class="form-control" value="{{ old('folio_factura') }}" required>
         </div>
 
-        <div class="mb-3">
-            <label>Factura</label>
-            <input type="text" name="factura" class="form-control" maxlength="100" value="{{ old('factura') }}">
+        <div class="mb-2">
+            <label>Fecha de emisión</label>
+            <input type="date" name="fecha_emision" class="form-control" value="{{ old('fecha_emision') }}" required>
         </div>
 
-        <div class="mb-3">
-            <label>Monto</label>
-            <input type="number" name="monto" class="form-control" step="0.01" required value="{{ old('monto') }}">
-        </div>
-
-        <div class="mb-3">
-            <label>Saldo</label>
-            <input type="number" name="saldo" class="form-control" step="0.01" required value="{{ old('saldo') }}">
-        </div>
-
-        <div class="mb-3">
+        <div class="mb-2">
             <label>Fecha de vencimiento</label>
-            <input type="date" name="fecha_vencimiento" class="form-control" required value="{{ old('fecha_vencimiento') }}">
+            <input type="date" name="fecha_vencimiento" class="form-control" value="{{ old('fecha_vencimiento') }}" required>
         </div>
 
-        <div class="mb-3">
-            <label>Comprobante (XML, PDF, JPG, PNG)</label>
-            <input type="file" name="comprobante" class="form-control">
+        <div class="mb-2">
+            <label>Monto total</label>
+            <input type="number" step="0.01" name="monto_total" class="form-control" value="{{ old('monto_total') }}" required>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-2">
+            <label>Saldo pendiente</label>
+            <input type="number" step="0.01" name="saldo_pendiente" class="form-control" value="{{ old('saldo_pendiente') }}" required>
+        </div>
+
+        <div class="mb-2">
+            <label>XML (SAT)</label>
+            <input type="file" name="xml" class="form-control" accept=".xml">
+        </div>
+
+        <div class="mb-2">
+            <label>PDF (SAT)</label>
+            <input type="file" name="pdf" class="form-control" accept=".pdf">
+        </div>
+
+        <div class="mb-2">
             <label>Estatus</label>
-            <select name="estatus" class="form-control" required>
-                <option value="En tiempo" {{ old('estatus') == 'En tiempo' ? 'selected' : '' }}>En tiempo</option>
-                <option value="Próximo a vencer" {{ old('estatus') == 'Próximo a vencer' ? 'selected' : '' }}>Próximo a vencer</option>
-                <option value="Vencido" {{ old('estatus') == 'Vencido' ? 'selected' : '' }}>Vencido</option>
-                <option value="Pagado" {{ old('estatus') == 'Pagado' ? 'selected' : '' }}>Pagado</option>
+            <select name="estatus" class="form-select" required>
+                <option value="Pendiente" @selected(old('estatus') == 'Pendiente')>Pendiente</option>
+                <option value="Pagado" @selected(old('estatus') == 'Pagado')>Pagado</option>
+                <option value="Vencido" @selected(old('estatus') == 'Vencido')>Vencido</option>
             </select>
         </div>
 
-        <div class="mb-3">
-            <label>Comentarios</label>
-            <textarea name="comentarios" class="form-control">{{ old('comentarios') }}</textarea>
-        </div>
-
-        <button type="submit" class="btn btn-success">Guardar</button>
+        <button class="btn btn-primary">Guardar</button>
         <a href="{{ route('cuentas_por_pagar.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>

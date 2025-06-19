@@ -1,45 +1,50 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Registrar Ticket de Soporte</h2>
-<form action="{{ route('tickets_soporte.store') }}" method="POST">
-    @csrf
-    <div class="mb-2">
-        <label>Cliente:</label>
-        <select name="cliente_id" class="form-select" required>
-            @foreach($clientes as $c)
-                <option value="{{ $c->id }}">{{ $c->nombre }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="mb-2">
-        <label>Tipo de póliza:</label>
-        <select name="poliza_servicio_id" class="form-select" required>
-            @foreach($polizas as $p)
-                <option value="{{ $p->id }}">{{ $p->tipo }} (Remoto: {{ $p->servicios_restantes_remoto }}, Domicilio: {{ $p->servicios_restantes_domicilio }})</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="mb-2">
-        <label>Tipo de Servicio:</label>
-        <select name="tipo_servicio" class="form-select" required>
-            <option value="Remoto">Remoto</option>
-            <option value="Domicilio">Domicilio</option>
-        </select>
-    </div>
-    <div class="mb-2">
-        <label>Descripción del Problema:</label>
-        <textarea name="descripcion" class="form-control" required></textarea>
-    </div>
-    <div class="mb-2">
-        <label>Prioridad:</label>
-        <select name="prioridad" class="form-select">
-            <option value="Baja">Baja</option>
-            <option value="Media">Media</option>
-            <option value="Alta">Alta</option>
-            <option value="Crítica">Crítica</option>
-        </select>
-    </div>
-    <button class="btn btn-success">Registrar Ticket</button>
-    <a href="{{ route('tickets_soporte.index') }}" class="btn btn-secondary">Cancelar</a>
-</form>
+<div class="container">
+    <h2>Nuevo Ticket de Soporte (Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b>)</h2>
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('servicios_empresariales.tickets_soporte.store', $servicio->id) }}" method="POST" class="card p-4 shadow">
+        @csrf
+
+        <div class="mb-3">
+            <label for="cliente_id" class="form-label">Cliente</label>
+            <select name="cliente_id" id="cliente_id" class="form-select" required>
+                <option value="">-- Selecciona --</option>
+                @foreach ($clientes as $cliente)
+                    <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
+                        {{ $cliente->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ old('titulo') }}">
+        </div>
+        <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea name="descripcion" id="descripcion" class="form-control">{{ old('descripcion') }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="estatus" class="form-label">Estatus</label>
+            <select name="estatus" id="estatus" class="form-select" required>
+                <option value="Abierto" {{ old('estatus') == 'Abierto' ? 'selected' : '' }}>Abierto</option>
+                <option value="En Proceso" {{ old('estatus') == 'En Proceso' ? 'selected' : '' }}>En Proceso</option>
+                <option value="Cerrado" {{ old('estatus') == 'Cerrado' ? 'selected' : '' }}>Cerrado</option>
+            </select>
+        </div>
+        <button class="btn btn-primary">Guardar</button>
+        <a href="{{ route('servicios_empresariales.tickets_soporte.index', $servicio->id) }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
 @endsection

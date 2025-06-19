@@ -66,7 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cableado/export-excel', [CableadoController::class, 'exportExcel'])->name('cableado.export.excel');
     Route::get('cableado/export-pdf', [CableadoController::class, 'exportPDF'])->name('cableado.export.pdf');
 
-    // ------ VEHÍCULOS Y SUBMÓDULOS (con todas las rutas de exportación) ------
+    // ------ VEHÍCULOS Y SUBMÓDULOS ------
     Route::get('vehiculos/export-excel', [VehiculoController::class, 'exportExcel'])->name('vehiculos.export.excel');
     Route::get('vehiculos/export-pdf', [VehiculoController::class, 'exportPDF'])->name('vehiculos.export.pdf');
 
@@ -124,6 +124,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('servicios_empresariales/export-excel', [ServicioEmpresarialController::class, 'exportExcel'])->name('servicios_empresariales.export.excel');
     Route::get('servicios_empresariales/export-pdf', [ServicioEmpresarialController::class, 'exportPDF'])->name('servicios_empresariales.export.pdf');
 
+    // ------ INVENTARIO GLOBAL (opcional) ------
+    Route::resource('inventario_clientes', InventarioClienteController::class);
+
+    // ------ SERVICIOS EMPRESARIALES: SUBMÓDULOS ------
+    Route::resource('servicios_empresariales.inventarios', InventarioClienteController::class);
+    Route::resource('servicios_empresariales.usuarios_clientes', UsuarioClienteController::class);
+    Route::resource('servicios_empresariales.configuraciones_clientes', ConfiguracionClienteController::class);
+    Route::resource('servicios_empresariales.tickets_soporte', TicketSoporteController::class);
+    Route::resource('servicios_empresariales.seguimientos_ticket', SeguimientoTicketController::class);
+
     // ------ TICKETS SOPORTE ------
     Route::get('tickets_soporte/export-excel', [TicketSoporteController::class, 'exportExcel'])->name('tickets_soporte.export.excel');
     Route::get('tickets_soporte/export-pdf', [TicketSoporteController::class, 'exportPDF'])->name('tickets_soporte.export.pdf');
@@ -137,10 +147,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cuentas_por_cobrar/export-pdf', [CuentasPorCobrarController::class, 'exportPDF'])->name('cuentas_por_cobrar.export.pdf');
     Route::post('cuentas_por_cobrar/{id}/cobros', [CuentasPorCobrarController::class, 'registrarCobro'])->name('cuentas_por_cobrar.cobros');
     Route::post('cuentas_por_cobrar/{id}/seguimientos', [CuentasPorCobrarController::class, 'registrarSeguimiento'])->name('cuentas_por_cobrar.seguimientos');
+    Route::resource('cuentas_por_cobrar', CuentasPorCobrarController::class);
+
     Route::get('cuentas_por_pagar/export-excel', [CuentasPorPagarController::class, 'exportExcel'])->name('cuentas_por_pagar.export.excel');
     Route::get('cuentas_por_pagar/export-pdf', [CuentasPorPagarController::class, 'exportPDF'])->name('cuentas_por_pagar.export.pdf');
     Route::post('cuentas_por_pagar/{id}/registrar-pago', [CuentasPorPagarController::class, 'registrarPago'])->name('cuentas_por_pagar.registrarPago');
     Route::post('cuentas_por_pagar/{id}/registrar-seguimiento', [CuentasPorPagarController::class, 'registrarSeguimiento'])->name('cuentas_por_pagar.registrarSeguimiento');
+    Route::resource('cuentas_por_pagar', CuentasPorPagarController::class);
 
     // ------ CONTABILIDAD ------
     Route::get('contabilidad', [ContabilidadController::class, 'index'])->name('contabilidad.index');
@@ -159,8 +172,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('desarrollo_software', DesarrolloSoftwareController::class);
     Route::resource('servicios_empresariales', ServicioEmpresarialController::class);
     Route::resource('finanzas', FinanzasController::class)->only(['index']);
-    Route::resource('cuentas_por_cobrar', CuentasPorCobrarController::class);
-    Route::resource('cuentas_por_pagar', CuentasPorPagarController::class);
     Route::resource('recursos_humanos', EmpleadoController::class);
     Route::resource('puestos_empleado', PuestoEmpleadoController::class)->except(['show']);
 
@@ -191,19 +202,26 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('documentos', DocumentoEmpleadoController::class)->except(['show']);
     });
 
-    // ------ SERVICIOS EMPRESARIALES: SUBMÓDULOS ------
+    // ------ POLIZAS SERVICIOS EMPRESARIALES ------
     Route::resource('polizas', PolizaServicioController::class);
-    Route::resource('servicios_empresariales.inventarios', InventarioClienteController::class);
-    Route::resource('servicios_empresariales.usuarios_clientes', UsuarioClienteController::class);
-    Route::resource('servicios_empresariales.configuraciones_clientes', ConfiguracionClienteController::class);
-    Route::resource('servicios_empresariales.tickets_soporte', TicketSoporteController::class);
-    Route::resource('servicios_empresariales.seguimientos_ticket', SeguimientoTicketController::class);
 
     // ------ FINANZAS ------
     Route::resource('ingresos', App\Http\Controllers\IngresoController::class);
     Route::resource('egresos', App\Http\Controllers\EgresoController::class);
     Route::resource('cuentas_bancarias', App\Http\Controllers\CuentaBancariaController::class);
     Route::resource('caja_chica', App\Http\Controllers\CajaChicaController::class);
+
+    // --- ENDPOINT PARA DATOS DE GRÁFICO ---
+Route::get('/api/graficos/cuentas_por_cobrar', [\App\Http\Controllers\CuentasPorCobrarController::class, 'graficoCuentasPorCobrar'])
+->name('api.graficos.cuentas_por_cobrar');
+
+// API para gráfico de Cuentas por Pagar
+Route::get('api/graficos/cuentas_por_pagar', [\App\Http\Controllers\CuentasPorPagarController::class, 'grafico'])->name('api.graficos.cuentas_por_pagar');
+
+
+
+    // ------ INVENTARIO GLOBAL (opcional, descomenta si lo necesitas como acceso general) ------
+    // Route::resource('inventario_clientes', InventarioClienteController::class);
 
 });
 

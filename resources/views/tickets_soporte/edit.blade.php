@@ -1,51 +1,51 @@
 @extends('layouts.app')
+
 @section('content')
-<h2>Editar Ticket de Soporte</h2>
-@if($errors->any())<div class="alert alert-danger"><ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
-<form action="{{ route('tickets_soporte.update', $tickets_soporte) }}" method="POST">
-    @csrf @method('PUT')
-    <div class="mb-2"><label>Cliente:</label>
-        <select name="cliente_id" class="form-control">
-            @foreach($clientes as $c)
-                <option value="{{ $c->id }}" @if($c->id == $tickets_soporte->cliente_id) selected @endif>{{ $c->nombre }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="mb-2"><label>Poliza:</label>
-        <select name="poliza_id" class="form-control">
-            @foreach($polizas as $p)
-                <option value="{{ $p->id }}" @if($p->id == $tickets_soporte->poliza_id) selected @endif>{{ $p->tipo }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="mb-2"><label>Asunto:</label><input name="asunto" class="form-control" value="{{ $tickets_soporte->asunto }}"></div>
-    <div class="mb-2"><label>Descripción:</label><textarea name="descripcion" class="form-control">{{ $tickets_soporte->descripcion }}</textarea></div>
-    <div class="mb-2"><label>Equipo:</label>
-        <select name="equipo_id" class="form-control"><option value="">N/A</option>
-            @foreach($equipos as $e)<option value="{{ $e->id }}" @if($e->id == $tickets_soporte->equipo_id) selected @endif>{{ $e->nombre_equipo }}</option>@endforeach
-        </select>
-    </div>
-    <div class="mb-2"><label>Responsable:</label>
-        <select name="responsable_id" class="form-control"><option value="">N/A</option>
-            @foreach($empleados as $em)<option value="{{ $em->id }}" @if($em->id == $tickets_soporte->responsable_id) selected @endif>{{ $em->nombre }}</option>@endforeach
-        </select>
-    </div>
-    <div class="mb-2"><label>Prioridad:</label>
-        <select name="prioridad" class="form-control">
-            <option @if($tickets_soporte->prioridad == 'Baja') selected @endif>Baja</option>
-            <option @if($tickets_soporte->prioridad == 'Media') selected @endif>Media</option>
-            <option @if($tickets_soporte->prioridad == 'Alta') selected @endif>Alta</option>
-        </select>
-    </div>
-    <div class="mb-2"><label>Estado:</label>
-        <select name="estado" class="form-control">
-            <option @if($tickets_soporte->estado == 'Pendiente') selected @endif>Pendiente</option>
-            <option @if($tickets_soporte->estado == 'En proceso') selected @endif>En proceso</option>
-            <option @if($tickets_soporte->estado == 'Resuelto') selected @endif>Resuelto</option>
-            <option @if($tickets_soporte->estado == 'Cerrado') selected @endif>Cerrado</option>
-        </select>
-    </div>
-    <button class="btn btn-success">Actualizar</button>
-    <a href="{{ route('tickets_soporte.index') }}" class="btn btn-secondary">Volver</a>
-</form>
+<div class="container">
+    <h2>Editar Ticket (Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b>)</h2>
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('servicios_empresariales.tickets_soporte.update', [$servicio->id, $ticket->id]) }}" method="POST" class="card p-4 shadow">
+        @csrf
+        @method('PUT')
+
+        <div class="mb-3">
+            <label for="cliente_id" class="form-label">Cliente</label>
+            <select name="cliente_id" id="cliente_id" class="form-select" required>
+                <option value="">-- Selecciona --</option>
+                @foreach ($clientes as $cliente)
+                    <option value="{{ $cliente->id }}" {{ old('cliente_id', $ticket->cliente_id) == $cliente->id ? 'selected' : '' }}>
+                        {{ $cliente->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ old('titulo', $ticket->titulo) }}">
+        </div>
+        <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea name="descripcion" id="descripcion" class="form-control">{{ old('descripcion', $ticket->descripcion) }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="estatus" class="form-label">Estatus</label>
+            <select name="estatus" id="estatus" class="form-select" required>
+                <option value="Abierto" {{ old('estatus', $ticket->estatus) == 'Abierto' ? 'selected' : '' }}>Abierto</option>
+                <option value="En Proceso" {{ old('estatus', $ticket->estatus) == 'En Proceso' ? 'selected' : '' }}>En Proceso</option>
+                <option value="Cerrado" {{ old('estatus', $ticket->estatus) == 'Cerrado' ? 'selected' : '' }}>Cerrado</option>
+            </select>
+        </div>
+        <button class="btn btn-primary">Actualizar</button>
+        <a href="{{ route('servicios_empresariales.tickets_soporte.index', $servicio->id) }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
 @endsection
