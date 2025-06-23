@@ -10,7 +10,7 @@
         <tr><th>Tipo</th><td>{{ $vehiculo->tipo }}</td></tr>
         <tr><th>Kilometraje</th><td>{{ $vehiculo->kilometraje }}</td></tr>
         <tr><th>Responsable</th><td>{{ $vehiculo->responsable->nombre ?? '-' }}</td></tr>
-        <tr><th>Cliente</th><td>{{ $vehiculo->cliente->nombre ?? '-' }}</td></tr>
+        {{-- Eliminado Cliente --}}
         <tr><th>Estado</th><td>{{ $vehiculo->status }}</td></tr>
         <tr><th>Fecha de adquisición</th><td>{{ $vehiculo->fecha_adquisicion }}</td></tr>
     </table>

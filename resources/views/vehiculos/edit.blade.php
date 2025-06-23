@@ -2,10 +2,17 @@
 @section('content')
     <h2>Editar Vehículo</h2>
     @if ($errors->any())
-        <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
     <form method="POST" action="{{ route('vehiculos.update', $vehiculo) }}">
-        @csrf @method('PUT')
+        @csrf 
+        @method('PUT')
         <div class="mb-3"><label>Placa</label>
             <input type="text" name="placa" class="form-control" required value="{{ old('placa', $vehiculo->placa) }}">
         </div>
@@ -29,14 +36,6 @@
                 <option value="">Seleccione...</option>
                 @foreach($responsables as $r)
                     <option value="{{ $r->id }}" @selected(old('responsable_id', $vehiculo->responsable_id) == $r->id)>{{ $r->nombre }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="mb-3"><label>Cliente</label>
-            <select name="cliente_id" class="form-select">
-                <option value="">Seleccione...</option>
-                @foreach($clientes as $c)
-                    <option value="{{ $c->id }}" @selected(old('cliente_id', $vehiculo->cliente_id) == $c->id)>{{ $c->nombre }}</option>
                 @endforeach
             </select>
         </div>

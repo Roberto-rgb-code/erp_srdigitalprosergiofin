@@ -11,8 +11,11 @@
     @if(session('success'))
         <div class="alert alert-success mb-3">{{ session('success') }}</div>
     @endif
+    @if(session('info'))
+        <div class="alert alert-info mb-3">{{ session('info') }}</div>
+    @endif
 
-    {{-- RESÚMENES Y GRÁFICOS --}}
+    {{-- Resúmenes --}}
     <div class="row mb-4 g-3">
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100">
@@ -20,7 +23,7 @@
                     <div class="fs-1 fw-bold text-primary mb-1">
                         ${{ number_format($ventas->sum('monto_total'), 2) }}
                     </div>
-                    <div class="text-muted">Monto Total de Ventas (página actual)</div>
+                    <div class="text-muted small">Monto total (página actual)</div>
                 </div>
             </div>
         </div>
@@ -30,7 +33,7 @@
                     <div class="fs-1 fw-bold text-success mb-1">
                         {{ $ventas->total() }}
                     </div>
-                    <div class="text-muted">Total de Ventas (paginado)</div>
+                    <div class="text-muted small">Ventas totales (paginado)</div>
                 </div>
             </div>
         </div>
@@ -40,20 +43,20 @@
                     <div class="fs-1 fw-bold text-info mb-1">
                         {{ $clientes->count() }}
                     </div>
-                    <div class="text-muted">Clientes registrados</div>
+                    <div class="text-muted small">Clientes registrados</div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- FILTROS --}}
+    {{-- Filtros --}}
     <form class="row g-2 align-items-end mb-4" method="GET">
         <div class="col-md-2">
             <label class="form-label mb-1">Cliente</label>
             <select name="cliente_id" class="form-select">
                 <option value="">Todos</option>
                 @foreach($clientes as $cl)
-                    <option value="{{ $cl->id }}" @selected(request('cliente_id') == $cl->id)>{{ $cl->nombre }}</option>
+                    <option value="{{ $cl->id }}" @selected(request('cliente_id') == $cl->id)>{{ $cl->nombre_completo }}</option>
                 @endforeach
             </select>
         </div>
@@ -75,19 +78,20 @@
             </select>
         </div>
         <div class="col-md-4 d-flex gap-2">
-            <button class="btn btn-secondary flex-grow-1">Buscar</button>
+            <button class="btn btn-secondary flex-grow-1"><i class="bi bi-search"></i> Buscar</button>
             <a href="{{ route('ventas.index') }}" class="btn btn-outline-secondary">Limpiar</a>
-            <a href="{{ route('ventas.export.excel', request()->all()) }}" class="btn btn-success">Exportar Excel</a>
-            <a href="{{ route('ventas.export.pdf', request()->all()) }}" class="btn btn-danger">Exportar PDF</a>
+            <a href="{{ route('ventas.export.excel', request()->all()) }}" class="btn btn-success">Excel</a>
+            <a href="{{ route('ventas.export.pdf', request()->all()) }}" class="btn btn-danger">PDF</a>
         </div>
     </form>
 
+    {{-- Gráficos --}}
     <div class="row mb-5 g-3">
         <div class="col-lg-6">
             <div class="card h-100">
                 <div class="card-header bg-white fw-bold">Ventas por Mes</div>
                 <div class="card-body">
-                    <canvas id="ventasPorMes" height="160"></canvas>
+                    <canvas id="ventasPorMes" height="140"></canvas>
                 </div>
             </div>
         </div>
@@ -95,17 +99,17 @@
             <div class="card h-100">
                 <div class="card-header bg-white fw-bold">Ventas por Estatus</div>
                 <div class="card-body">
-                    <canvas id="ventasPorEstatus" height="160"></canvas>
+                    <canvas id="ventasPorEstatus" height="140"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- TABLA DE VENTAS --}}
+    {{-- Tabla de Ventas --}}
     <div class="table-responsive">
         <table class="table table-bordered table-striped align-middle shadow-sm">
             <thead class="table-primary">
-                <tr>
+                <tr class="align-middle text-center">
                     <th>Folio</th>
                     <th>ID</th>
                     <th>Cliente</th>
@@ -113,18 +117,18 @@
                     <th>Monto Total</th>
                     <th>Estatus</th>
                     <th>Tipo</th>
-                    <th>Acciones</th>
+                    <th style="min-width:160px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($ventas as $v)
                     <tr>
-                        <td>{{ $v->folio ?? '-' }}</td>
-                        <td>{{ $v->id }}</td>
-                        <td>{{ $v->cliente->nombre ?? '-' }}</td>
+                        <td class="text-center">{{ $v->folio ?? '-' }}</td>
+                        <td class="text-center">{{ $v->id }}</td>
+                        <td>{{ $v->cliente->nombre_completo ?? '-' }}</td>
                         <td>{{ $v->fecha_venta }}</td>
                         <td class="fw-bold text-end">${{ number_format($v->monto_total,2) }}</td>
-                        <td>
+                        <td class="text-center">
                             @if($v->estatus === 'Pagado')
                                 <span class="badge bg-success">Pagado</span>
                             @elseif($v->estatus === 'Pendiente')
@@ -135,21 +139,28 @@
                                 <span class="badge bg-secondary">{{ $v->estatus }}</span>
                             @endif
                         </td>
-                        <td>{{ $v->tipo_venta }}</td>
-                        <td>
-                            <a href="{{ route('ventas.show', $v) }}" class="btn btn-sm btn-info mb-1">Ver</a>
-                            <a href="{{ route('ventas.edit', $v) }}" class="btn btn-sm btn-warning mb-1">Editar</a>
-                            <a href="{{ route('ventas.factura', $v) }}" class="btn btn-sm btn-outline-primary mb-1" target="_blank">Factura PDF</a>
+                        <td class="text-center">{{ $v->tipo_venta }}</td>
+                        <td class="text-center">
+                            <a href="{{ route('ventas.show', $v) }}" class="btn btn-sm btn-info mb-1" title="Ver detalles"><i class="bi bi-eye"></i></a>
+                            <a href="{{ route('ventas.edit', $v) }}" class="btn btn-sm btn-warning mb-1" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ route('ventas.nota', $v) }}" class="btn btn-sm btn-outline-danger mb-1" target="_blank" title="Nota de Venta PDF">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                            <a href="{{ route('ventas.factura', $v) }}" class="btn btn-sm btn-outline-primary mb-1" target="_blank" title="Factura PDF">
+                                <i class="bi bi-file-earmark-medical"></i>
+                            </a>
                             <form action="{{ route('ventas.destroy', $v) }}" method="POST" style="display:inline-block;">
                                 @csrf
                                 @method('DELETE')
-                                <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger">Eliminar</button>
+                                <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8">No hay ventas.</td>
+                        <td colspan="8" class="text-center text-muted">No hay ventas registradas.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -159,7 +170,7 @@
         </div>
     </div>
 
-    {{-- TOP CLIENTES --}}
+    {{-- Top Clientes --}}
     <div class="my-5">
         <div class="card">
             <div class="card-header bg-white fw-bold">Top 5 Clientes por monto vendido</div>
@@ -174,7 +185,7 @@
                     <tbody>
                         @foreach($topClientes as $tc)
                             <tr>
-                                <td>{{ $tc->cliente->nombre ?? '-' }}</td>
+                                <td>{{ $tc->cliente->nombre_completo ?? '-' }}</td>
                                 <td class="fw-bold">${{ number_format($tc->total,2) }}</td>
                             </tr>
                         @endforeach
@@ -207,9 +218,7 @@
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { display: false }
-            }
+            plugins: { legend: { display: false } }
         }
     });
 @endif

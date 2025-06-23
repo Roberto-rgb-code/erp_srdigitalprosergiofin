@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container py-4">
     <div class="card shadow rounded-4 mb-4">
@@ -9,7 +8,7 @@
             </h3>
             <dl class="row">
                 <dt class="col-sm-3">Cliente</dt>
-                <dd class="col-sm-9">{{ $venta->cliente->nombre ?? '-' }}</dd>
+                <dd class="col-sm-9">{{ $venta->cliente->nombre_completo ?? '-' }}</dd>
 
                 <dt class="col-sm-3">Fecha de Venta</dt>
                 <dd class="col-sm-9">{{ $venta->fecha_venta }}</dd>
@@ -39,23 +38,29 @@
             <table class="table table-striped mb-0">
                 <thead>
                     <tr>
+                        <th>SKU</th>
+                        <th>No. Serie</th>
                         <th>Producto/Servicio</th>
+                        <th>Precio Costo</th>
+                        <th>Precio Venta</th>
                         <th>Cantidad</th>
-                        <th>Precio Unitario</th>
                         <th>Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($venta->detalles as $detalle)
                         <tr>
-                            <td>{{ $detalle->producto_servicio ?? ($detalle->producto->nombre ?? '-') }}</td>
+                            <td>{{ $detalle->sku ?? '-' }}</td>
+                            <td>{{ $detalle->no_serie ?? '-' }}</td>
+                            <td>{{ $detalle->nombre_producto ?? ($detalle->producto->nombre ?? '-') }}</td>
+                            <td>${{ number_format($detalle->precio_costo,2) }}</td>
+                            <td>${{ number_format($detalle->precio_venta,2) }}</td>
                             <td>{{ $detalle->cantidad }}</td>
-                            <td>${{ number_format($detalle->precio_unitario,2) }}</td>
                             <td>${{ number_format($detalle->subtotal,2) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center text-muted">No hay productos registrados.</td>
+                            <td colspan="7" class="text-center text-muted">No hay productos registrados.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -63,7 +68,6 @@
         </div>
     </div>
 
-    {{-- PAGOS RELACIONADOS, si tienes la relación en el modelo Venta --}}
     @if($venta->pagos && $venta->pagos->count())
     <div class="card shadow rounded-4 mb-4">
         <div class="card-header bg-light fw-bold">Pagos</div>
@@ -94,9 +98,12 @@
 
     <div class="d-flex gap-2">
         <a href="{{ route('ventas.index') }}" class="btn btn-secondary rounded-pill">Volver</a>
-        <a href="{{ route('ventas.factura', $venta) }}" class="btn btn-outline-danger rounded-pill">
-            <i class="bi bi-file-earmark-pdf"></i> Descargar Factura PDF
+        <a href="{{ route('ventas.nota', $venta) }}" class="btn btn-outline-danger rounded-pill" target="_blank">
+            <i class="bi bi-file-earmark-pdf"></i> Descargar Nota de Venta PDF
         </a>
+        <button class="btn btn-outline-success rounded-pill" onclick="alert('Próximamente: integración con SAT para factura timbrada');" type="button">
+            <i class="bi bi-file-earmark-medical"></i> Generar Factura (SAT)
+        </button>
     </div>
 </div>
 @endsection

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cableado;
 use App\Models\Cliente;
+use App\Models\Empleado; // Para relación responsable
 use Illuminate\Http\Request;
 use App\Exports\CableadoExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -13,7 +14,7 @@ class CableadoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Cableado::with('cliente');
+        $query = Cableado::with(['cliente', 'responsable']); // Carga ambas relaciones
 
         if ($request->filled('nombre_proyecto')) {
             $query->where('nombre_proyecto', 'ilike', '%' . $request->nombre_proyecto . '%');
@@ -24,8 +25,8 @@ class CableadoController extends Controller
         if ($request->filled('tipo_instalacion')) {
             $query->where('tipo_instalacion', $request->tipo_instalacion);
         }
-        if ($request->filled('responsable')) {
-            $query->where('responsable', 'ilike', '%' . $request->responsable . '%');
+        if ($request->filled('responsable_id')) {
+            $query->where('responsable_id', $request->responsable_id);
         }
         if ($request->filled('estatus')) {
             $query->where('estatus', $request->estatus);
@@ -40,15 +41,18 @@ class CableadoController extends Controller
 
         $cableados = $query->orderByDesc('id')->paginate(15);
 
-        $clientes = Cliente::orderBy('nombre')->get();
+        $clientes = Cliente::orderBy('nombre_completo')->get();
+        $responsables = Empleado::orderBy('nombre')->get();
 
-        return view('cableado.index', compact('cableados', 'clientes'));
+        return view('cableado.index', compact('cableados', 'clientes', 'responsables'));
     }
 
     public function create()
     {
-        $clientes = Cliente::orderBy('nombre')->get();
-        return view('cableado.create', compact('clientes'));
+        $clientes = Cliente::orderBy('nombre_completo')->get();
+        $responsables = Empleado::orderBy('nombre')->get();
+
+        return view('cableado.create', compact('clientes', 'responsables'));
     }
 
     public function store(Request $request)
@@ -61,26 +65,29 @@ class CableadoController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'nullable|date',
-            'responsable' => 'required|string|max:100',
+            'responsable_id' => 'required|integer|exists:empleados,id',
             'costo_estimado' => 'nullable|numeric',
             'costo_real' => 'nullable|numeric',
             'estatus' => 'required|string|max:50',
             'comentarios' => 'nullable|string'
         ]);
         Cableado::create($validated);
+
         return redirect()->route('cableado.index')->with('success', 'Proyecto de cableado registrado correctamente');
     }
 
     public function show(Cableado $cableado)
     {
-        $cableado->load('cliente');
+        $cableado->load(['cliente', 'responsable']);
         return view('cableado.show', compact('cableado'));
     }
 
     public function edit(Cableado $cableado)
     {
-        $clientes = Cliente::orderBy('nombre')->get();
-        return view('cableado.edit', compact('cableado', 'clientes'));
+        $clientes = Cliente::orderBy('nombre_completo')->get();
+        $responsables = Empleado::orderBy('nombre')->get();
+
+        return view('cableado.edit', compact('cableado', 'clientes', 'responsables'));
     }
 
     public function update(Request $request, Cableado $cableado)
@@ -93,13 +100,14 @@ class CableadoController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'nullable|date',
-            'responsable' => 'required|string|max:100',
+            'responsable_id' => 'required|integer|exists:empleados,id',
             'costo_estimado' => 'nullable|numeric',
             'costo_real' => 'nullable|numeric',
             'estatus' => 'required|string|max:50',
             'comentarios' => 'nullable|string'
         ]);
         $cableado->update($validated);
+
         return redirect()->route('cableado.index')->with('success', 'Proyecto de cableado actualizado correctamente');
     }
 
@@ -116,8 +124,21 @@ class CableadoController extends Controller
 
     public function exportPDF()
     {
-        $cableados = Cableado::with('cliente')->get();
+        $cableados = Cableado::with(['cliente', 'responsable'])->get();
         $pdf = PDF::loadView('cableado.export_pdf', compact('cableados'));
         return $pdf->download('proyectos_cableado.pdf');
     }
+
+    public function actualizarEstado(Request $request, Cableado $cableado)
+{
+    $request->validate([
+        'estatus' => 'required|string|in:Planeado,En curso,Finalizado',
+    ]);
+
+    $cableado->estatus = $request->estatus;
+    $cableado->save();
+
+    return response()->json(['success' => true]);
+}
+
 }

@@ -57,6 +57,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('ventas/{venta}/factura', [VentaController::class, 'facturaPDF'])->name('ventas.factura');
     Route::get('ventas/{venta}/detalle_ventas/export-excel', [DetalleVentaController::class, 'exportExcel'])->name('ventas.detalle_ventas.export.excel');
     Route::get('ventas/{venta}/detalle_ventas/export-pdf', [DetalleVentaController::class, 'exportPDF'])->name('ventas.detalle_ventas.export.pdf');
+    // Descargar Nota de Venta (PDF bonito para el cliente)
+    Route::get('ventas/{venta}/nota', [App\Http\Controllers\VentaController::class, 'notaVentaPDF'])->name('ventas.nota');
 
     // Taller
     Route::get('taller/export-excel', [TallerController::class, 'exportExcel'])->name('taller.export.excel');
@@ -217,8 +219,17 @@ Route::get('/api/graficos/cuentas_por_cobrar', [\App\Http\Controllers\CuentasPor
 
 // API para gráfico de Cuentas por Pagar
 Route::get('api/graficos/cuentas_por_pagar', [\App\Http\Controllers\CuentasPorPagarController::class, 'grafico'])->name('api.graficos.cuentas_por_pagar');
+// Rutas para los datos fiscales de clientes
+Route::get('datos-fiscales/{datoFiscal}', [\App\Http\Controllers\DatoFiscalClienteController::class, 'show'])->name('datos-fiscales.show');
+
+Route::patch('/desarrollo_software/{desarrollo_software}/actualizar-estado', [DesarrolloSoftwareController::class, 'actualizarEstado'])->name('desarrollo_software.actualizar_estado');
+Route::patch('desarrollo_software/{desarrollo_software}/estado', [DesarrolloSoftwareController::class, 'actualizarEstado'])->name('desarrollo_software.actualizarEstado');
 
 
+
+
+
+Route::patch('/cableado/{cableado}/estado', [CableadoController::class, 'actualizarEstado'])->name('cableado.actualizarEstado');
 
     // ------ INVENTARIO GLOBAL (opcional, descomenta si lo necesitas como acceso general) ------
     // Route::resource('inventario_clientes', InventarioClienteController::class);

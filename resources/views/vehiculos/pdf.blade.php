@@ -15,7 +15,7 @@
         <thead>
             <tr>
                 <th>ID</th><th>Placa</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Tipo</th>
-                <th>Kilometraje</th><th>Responsable</th><th>Cliente</th><th>Estado</th><th>Fecha adquisición</th>
+                <th>Kilometraje</th><th>Responsable</th><th>Estado</th><th>Fecha adquisición</th>
             </tr>
         </thead>
         <tbody>
@@ -29,7 +29,6 @@
                     <td>{{ $v->tipo }}</td>
                     <td>{{ $v->kilometraje }}</td>
                     <td>{{ $v->responsable->nombre ?? '-' }}</td>
-                    <td>{{ $v->cliente->nombre ?? '-' }}</td>
                     <td>{{ $v->status }}</td>
                     <td>{{ $v->fecha_adquisicion }}</td>
                 </tr>

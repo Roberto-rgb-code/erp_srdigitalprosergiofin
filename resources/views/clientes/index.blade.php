@@ -32,7 +32,7 @@
             <div class="card text-bg-success-subtle border-0 shadow-sm h-100">
                 <div class="card-body d-flex flex-column align-items-center">
                     <div class="fs-3"><i class="bi bi-cash-coin"></i></div>
-                    <div class="fw-bold fs-5">${{ number_format($creditoTotal, 2) }}</div>
+                    <div class="fw-bold fs-5">-</div>
                     <small class="text-uppercase text-secondary">Crédito total</small>
                 </div>
             </div>
@@ -41,7 +41,7 @@
             <div class="card text-bg-warning-subtle border-0 shadow-sm h-100">
                 <div class="card-body d-flex flex-column align-items-center">
                     <div class="fs-3"><i class="bi bi-coin"></i></div>
-                    <div class="fw-bold fs-5">${{ number_format($saldoTotal, 2) }}</div>
+                    <div class="fw-bold fs-5">-</div>
                     <small class="text-uppercase text-secondary">Saldo total</small>
                 </div>
             </div>
@@ -112,14 +112,12 @@
                 <tr>
                     <th>Folio</th>
                     <th>Nombre</th>
+                    <th>Empresa</th>
                     <th>RFC</th>
-                    <th>Dirección</th>
                     <th>Contacto</th>
                     <th>Tipo</th>
-                    <th>Límite crédito</th>
-                    <th>Saldo</th>
                     <th>Estatus</th>
-                    <th style="width:110px">Acciones</th>
+                    <th style="width:150px">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -127,14 +125,14 @@
                     <tr>
                         <td>{{ $c->id }}</td>
                         <td>
-                            <a href="{{ route('clientes.show', $c) }}" class="fw-semibold text-primary">{{ $c->nombre }}</a>
+                            <a href="{{ route('clientes.show', $c) }}" class="fw-semibold text-primary">
+                                {{ $c->nombre_completo }}
+                            </a>
                         </td>
-                        <td>{{ $c->rfc }}</td>
-                        <td>{{ $c->direccion }}</td>
+                        <td>{{ $c->empresa }}</td>
+                        <td>{{ $c->datoFiscal->rfc ?? '-' }}</td>
                         <td>{{ $c->contacto }}</td>
                         <td>{{ $c->tipo_cliente }}</td>
-                        <td>${{ number_format($c->limite_credito,2) }}</td>
-                        <td>${{ number_format($c->saldo,2) }}</td>
                         <td>
                             <span class="badge bg-{{ $c->status == 'Activo' ? 'success' : 'secondary' }}">
                                 {{ $c->status }}
@@ -151,10 +149,15 @@
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
+                            @if($c->datoFiscal)
+                            <a href="{{ route('datos-fiscales.show', $c->datoFiscal) }}" class="btn btn-info btn-sm" title="Datos Fiscales">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+                            @endif
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="10" class="text-center text-secondary">No hay clientes registrados.</td></tr>
+                    <tr><td colspan="8" class="text-center text-secondary">No hay clientes registrados.</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Proyectos de Cableado PDF</title>
     <style>
-        table { border-collapse: collapse; width: 100%; font-size: 11px;}
+        table { border-collapse: collapse; width: 100%; font-size: 11px; }
         th, td { border: 1px solid #555; padding: 4px; }
         th { background: #eaeaea; }
     </style>
@@ -39,8 +39,8 @@
                     <td>{{ $c->fecha_fin }}</td>
                     <td>{{ $c->responsable->nombre ?? '-' }}</td>
                     <td>{{ $c->estatus }}</td>
-                    <td>${{ number_format($c->costo_estimado,2) }}</td>
-                    <td>${{ number_format($c->costo_real,2) }}</td>
+                    <td>${{ number_format($c->costo_estimado, 2) }}</td>
+                    <td>${{ number_format($c->costo_real, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>

@@ -1,55 +1,57 @@
 @extends('layouts.app')
 @section('content')
-<h2>{{ isset($desarrollo_software) ? 'Editar' : 'Nuevo' }} Proyecto de Software</h2>
-<form method="POST" action="{{ isset($desarrollo_software) ? route('desarrollo_software.update', $desarrollo_software) : route('desarrollo_software.store') }}">
-    @csrf
-    @if(isset($desarrollo_software))
-        @method('PUT')
-    @endif
+<h2>Editar Proyecto de Software</h2>
 
-    <div class="mb-2">
-        <label>Cliente:</label>
-        <select name="cliente_id" class="form-control" required>
+@if ($errors->any())
+<div class="alert alert-danger">
+    <ul class="mb-0">
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+<form method="POST" action="{{ route('desarrollo_software.update', $desarrollo_software) }}">
+    @csrf
+    @method('PUT')
+
+    <div class="mb-3">
+        <label for="cliente_id">Cliente:</label>
+        <select name="cliente_id" id="cliente_id" class="form-control" required>
             <option value="">Seleccione...</option>
             @foreach($clientes as $c)
-                <option value="{{ $c->id }}" 
-                    @selected(old('cliente_id', $desarrollo_software->cliente_id ?? '') == $c->id)>
-                    {{ $c->nombre }}
-                </option>
+            <option value="{{ $c->id }}" @selected(old('cliente_id', $desarrollo_software->cliente_id) == $c->id)>{{ $c->nombre_completo }}</option>
             @endforeach
         </select>
     </div>
-    
-    <div class="mb-2">
-        <label>Nombre del proyecto:</label>
-        <input type="text" name="nombre" class="form-control"
-            value="{{ old('nombre', $desarrollo_software->nombre ?? '') }}" required maxlength="100">
+
+    <div class="mb-3">
+        <label for="nombre">Nombre del proyecto:</label>
+        <input type="text" name="nombre" id="nombre" class="form-control" required maxlength="100" value="{{ old('nombre', $desarrollo_software->nombre) }}">
     </div>
-    
-    <div class="mb-2">
-        <label>Tipo de software:</label>
-        <select name="tipo_software" class="form-control" required>
-            <option value="">Seleccione...</option>
-            @php
-                $tiposSoftware = [
-                    'Web', 'Móvil', 'API', 'Escritorio',
-                    'Servicio en la nube', 'Microservicio', 'IoT', 'Otro'
-                ];
-            @endphp
-            @foreach($tiposSoftware as $tipo)
-                <option value="{{ $tipo }}"
-                    @selected(old('tipo_software', $desarrollo_software->tipo_software ?? '') == $tipo)>
-                    {{ $tipo }}
-                </option>
-            @endforeach
-        </select>
+
+    <div class="mb-3">
+        <label for="tipo_software">Tipo de software:</label>
+        <input type="text" name="tipo_software" id="tipo_software" class="form-control" maxlength="150"
+               placeholder="Ej: Web, Móvil, API, Escritorio" value="{{ old('tipo_software', $desarrollo_software->tipo_software) }}" list="tipos_software">
+        <datalist id="tipos_software">
+            <option value="Web">
+            <option value="Móvil">
+            <option value="API">
+            <option value="Escritorio">
+            <option value="Servicio en la nube">
+            <option value="Microservicio">
+            <option value="IoT">
+            <option value="Otro">
+        </datalist>
+        <small class="text-muted">Escribe libremente o elige una opción.</small>
     </div>
-    
-    <div class="mb-2">
-        <label>Stack tecnológico:</label>
-        <input type="text" name="stack_tecnologico" class="form-control"
-            value="{{ old('stack_tecnologico', $desarrollo_software->stack_tecnologico ?? '') }}"
-            list="stacks_tec" maxlength="150" placeholder="Ej: Python, Vue, SQL">
+
+    <div class="mb-3">
+        <label for="stack_tecnologico">Stack tecnológico:</label>
+        <input type="text" name="stack_tecnologico" id="stack_tecnologico" class="form-control" maxlength="150" 
+               placeholder="Ej: Python, Vue, SQL" value="{{ old('stack_tecnologico', $desarrollo_software->stack_tecnologico) }}" list="stacks_tec">
         <datalist id="stacks_tec">
             <option value="Laravel, Vue, MySQL">
             <option value="React, Node.js, PostgreSQL">
@@ -65,52 +67,47 @@
         </datalist>
         <small class="text-muted">Escribe libremente o elige una sugerencia.</small>
     </div>
-    
-    <div class="mb-2">
-        <label>Fecha inicio:</label>
-        <input type="date" name="fecha_inicio" class="form-control"
-            value="{{ old('fecha_inicio', $desarrollo_software->fecha_inicio ?? '') }}" required>
+
+    <div class="mb-3">
+        <label for="fecha_inicio">Fecha inicio:</label>
+        <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" required value="{{ old('fecha_inicio', $desarrollo_software->fecha_inicio) }}">
     </div>
-    <div class="mb-2">
-        <label>Fecha entrega (opcional):</label>
-        <input type="date" name="fecha_fin" class="form-control"
-            value="{{ old('fecha_fin', $desarrollo_software->fecha_fin ?? '') }}">
+
+    <div class="mb-3">
+        <label for="fecha_fin">Fecha entrega (opcional):</label>
+        <input type="date" name="fecha_fin" id="fecha_fin" class="form-control" value="{{ old('fecha_fin', $desarrollo_software->fecha_fin) }}">
     </div>
-    
-    <div class="mb-2">
-        <label>Responsable:</label>
-        <select name="responsable_id" class="form-control" required>
+
+    <div class="mb-3">
+        <label for="responsable_id">Responsable:</label>
+        <select name="responsable_id" id="responsable_id" class="form-control">
             <option value="">Seleccione...</option>
             @foreach($responsables as $r)
-                <option value="{{ $r->id }}"
-                    @selected(old('responsable_id', $desarrollo_software->responsable_id ?? '') == $r->id)>
-                    {{ $r->nombre }}
-                </option>
+            <option value="{{ $r->id }}" @selected(old('responsable_id', $desarrollo_software->responsable_id) == $r->id)>{{ $r->nombre }}</option>
             @endforeach
         </select>
+        <small class="text-muted">Opcional</small>
     </div>
-    
-    <div class="mb-2">
-        <label>Estado:</label>
-        <select name="estado" class="form-control" required>
-            @php
-                $estados = ['Planeado', 'En desarrollo', 'Testing', 'Finalizado'];
-            @endphp
+
+    <div class="mb-3">
+        <label for="estado">Estado:</label>
+        @php
+        $estados = ['Planeado', 'En desarrollo', 'Testing', 'Finalizado'];
+        @endphp
+        <select name="estado" id="estado" class="form-control" required>
             <option value="">Seleccione...</option>
             @foreach($estados as $estado)
-                <option value="{{ $estado }}"
-                    @selected(old('estado', $desarrollo_software->estado ?? '') == $estado)>
-                    {{ $estado }}
-                </option>
+            <option value="{{ $estado }}" @selected(old('estado', $desarrollo_software->estado) == $estado)>{{ $estado }}</option>
             @endforeach
         </select>
     </div>
-    
-    <div class="mb-2">
-        <label>Historial/Notas:</label>
-        <textarea name="historial" class="form-control">{{ old('historial', $desarrollo_software->historial ?? '') }}</textarea>
+
+    <div class="mb-3">
+        <label for="historial">Historial/Notas:</label>
+        <textarea name="historial" id="historial" class="form-control">{{ old('historial', $desarrollo_software->historial) }}</textarea>
     </div>
-    <button class="btn btn-success">Guardar</button>
+
+    <button type="submit" class="btn btn-success">Actualizar</button>
     <a href="{{ route('desarrollo_software.index') }}" class="btn btn-secondary">Cancelar</a>
 </form>
 @endsection

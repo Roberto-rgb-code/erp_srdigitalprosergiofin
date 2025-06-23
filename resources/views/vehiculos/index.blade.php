@@ -84,7 +84,6 @@
                     <th>Tipo</th>
                     <th>Kilometraje</th>
                     <th>Responsable</th>
-                    <th>Cliente</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
@@ -100,7 +99,6 @@
                         <td>{{ $v->tipo }}</td>
                         <td>{{ $v->kilometraje ?? 0 }}</td>
                         <td>{{ $v->responsable->nombre ?? '-' }}</td>
-                        <td>{{ $v->cliente->nombre ?? '-' }}</td>
                         <td>
                             <span class="badge
                                 @if($v->status=='Disponible') bg-success
@@ -131,7 +129,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="11" class="text-center">No hay vehículos registrados.</td></tr>
+                    <tr><td colspan="10" class="text-center">No hay vehículos registrados.</td></tr>
                 @endforelse
             </tbody>
         </table>

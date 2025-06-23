@@ -6,7 +6,7 @@
             <h5 class="card-title">{{ $cableado->nombre_proyecto }}</h5>
             <dl class="row">
                 <dt class="col-sm-4">Cliente</dt>
-                <dd class="col-sm-8">{{ $cableado->cliente->nombre ?? '-' }}</dd>
+                <dd class="col-sm-8">{{ $cableado->cliente->nombre_completo ?? '-' }}</dd>
 
                 <dt class="col-sm-4">Tipo de instalación</dt>
                 <dd class="col-sm-8">{{ $cableado->tipo_instalacion }}</dd>
@@ -24,13 +24,13 @@
                 <dd class="col-sm-8">{{ $cableado->fecha_fin }}</dd>
 
                 <dt class="col-sm-4">Responsable</dt>
-                <dd class="col-sm-8">{{ $cableado->responsable_id }}</dd>
+                <dd class="col-sm-8">{{ $cableado->responsable->nombre ?? '-' }}</dd>
 
                 <dt class="col-sm-4">Costo estimado</dt>
-                <dd class="col-sm-8">${{ number_format($cableado->costo_estimado,2) }}</dd>
+                <dd class="col-sm-8">${{ number_format($cableado->costo_estimado, 2) }}</dd>
 
                 <dt class="col-sm-4">Costo real</dt>
-                <dd class="col-sm-8">${{ number_format($cableado->costo_real,2) }}</dd>
+                <dd class="col-sm-8">${{ number_format($cableado->costo_real, 2) }}</dd>
 
                 <dt class="col-sm-4">Estado</dt>
                 <dd class="col-sm-8">
@@ -42,6 +42,7 @@
                         {{ $cableado->estatus }}
                     </span>
                 </dd>
+
                 <dt class="col-sm-4">Comentarios</dt>
                 <dd class="col-sm-8">{{ $cableado->comentarios }}</dd>
             </dl>

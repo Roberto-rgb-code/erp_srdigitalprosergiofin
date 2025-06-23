@@ -1,4 +1,6 @@
+{{-- resources/views/clientes/create.blade.php --}}
 @extends('layouts.app')
+
 @section('content')
     <h2>Nuevo Cliente</h2>
     <form method="POST" action="{{ route('clientes.store') }}" enctype="multipart/form-data">

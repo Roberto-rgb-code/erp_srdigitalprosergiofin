@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehiculo;
 use App\Models\Empleado;
-use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Exports\VehiculosExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -14,7 +13,7 @@ class VehiculoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Vehiculo::with(['responsable', 'cliente']);
+        $query = Vehiculo::with('responsable');
 
         // Filtros
         if ($request->filled('placa')) {
@@ -45,13 +44,11 @@ class VehiculoController extends Controller
         $responsables = Empleado::orderBy('nombre')->get();
 
         // ------ GRAFICOS --------
-        // Agrupamiento por status
         $graficoEstados = Vehiculo::selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status')
             ->toArray();
 
-        // Agrupamiento por marca
         $graficoMarcas = Vehiculo::selectRaw('marca, count(*) as total')
             ->groupBy('marca')
             ->pluck('total', 'marca')
@@ -68,8 +65,7 @@ class VehiculoController extends Controller
     public function create()
     {
         $responsables = Empleado::orderBy('nombre')->get();
-        $clientes = Cliente::orderBy('nombre')->get();
-        return view('vehiculos.create', compact('responsables', 'clientes'));
+        return view('vehiculos.create', compact('responsables'));
     }
 
     public function store(Request $request)
@@ -82,7 +78,6 @@ class VehiculoController extends Controller
             'tipo' => 'nullable|string|max:50',
             'kilometraje' => 'nullable|numeric',
             'responsable_id' => 'nullable|integer|exists:empleados,id',
-            'cliente_id' => 'nullable|integer|exists:clientes,id',
             'status' => 'required|string|max:30',
             'fecha_adquisicion' => 'nullable|date',
         ]);
@@ -92,15 +87,14 @@ class VehiculoController extends Controller
 
     public function show(Vehiculo $vehiculo)
     {
-        $vehiculo->load(['responsable', 'cliente']);
+        $vehiculo->load('responsable');
         return view('vehiculos.show', compact('vehiculo'));
     }
 
     public function edit(Vehiculo $vehiculo)
     {
         $responsables = Empleado::orderBy('nombre')->get();
-        $clientes = Cliente::orderBy('nombre')->get();
-        return view('vehiculos.edit', compact('vehiculo', 'responsables', 'clientes'));
+        return view('vehiculos.edit', compact('vehiculo', 'responsables'));
     }
 
     public function update(Request $request, Vehiculo $vehiculo)
@@ -113,7 +107,6 @@ class VehiculoController extends Controller
             'tipo' => 'nullable|string|max:50',
             'kilometraje' => 'nullable|numeric',
             'responsable_id' => 'nullable|integer|exists:empleados,id',
-            'cliente_id' => 'nullable|integer|exists:clientes,id',
             'status' => 'required|string|max:30',
             'fecha_adquisicion' => 'nullable|date',
         ]);
@@ -134,7 +127,7 @@ class VehiculoController extends Controller
 
     public function exportPDF()
     {
-        $vehiculos = Vehiculo::with(['responsable', 'cliente'])->get();
+        $vehiculos = Vehiculo::with('responsable')->get();
         $pdf = PDF::loadView('vehiculos.pdf', compact('vehiculos'));
         return $pdf->download('vehiculos.pdf');
     }

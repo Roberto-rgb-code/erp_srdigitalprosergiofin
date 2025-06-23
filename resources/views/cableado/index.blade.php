@@ -14,7 +14,7 @@
             <select name="cliente_id" class="form-select">
                 <option value="">Cliente</option>
                 @foreach($clientes as $cl)
-                    <option value="{{ $cl->id }}" @selected(request('cliente_id') == $cl->id)>{{ $cl->nombre }}</option>
+                    <option value="{{ $cl->id }}" @selected(request('cliente_id') == $cl->id)>{{ $cl->nombre_completo }}</option>
                 @endforeach
             </select>
         </div>
@@ -22,7 +22,12 @@
             <input type="text" name="tipo_instalacion" class="form-control" placeholder="Tipo instalación" value="{{ request('tipo_instalacion') }}">
         </div>
         <div class="col-md-2">
-            <input type="text" name="responsable_id" class="form-control" placeholder="Responsable" value="{{ request('responsable_id') }}">
+            <select name="responsable_id" class="form-select">
+                <option value="">Responsable</option>
+                @foreach($responsables as $resp)
+                    <option value="{{ $resp->id }}" @selected(request('responsable_id') == $resp->id)>{{ $resp->nombre }}</option>
+                @endforeach
+            </select>
         </div>
         <div class="col-md-2">
             <select name="estatus" class="form-select">
@@ -32,7 +37,7 @@
                 <option value="Finalizado" @selected(request('estatus') == 'Finalizado')>Finalizado</option>
             </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-2 d-flex gap-2">
             <button class="btn btn-secondary">Filtrar</button>
             <a href="{{ route('cableado.index') }}" class="btn btn-outline-secondary">Limpiar</a>
         </div>
@@ -65,6 +70,7 @@
         </div>
     </div>
 
+    {{-- Tabla de proyectos --}}
     <table class="table table-bordered table-striped align-middle">
         <thead>
             <tr>
@@ -83,12 +89,12 @@
         @forelse($cableados as $p)
             <tr>
                 <td>{{ $p->nombre_proyecto }}</td>
-                <td>{{ $p->cliente->nombre ?? '-' }}</td>
+                <td>{{ $p->cliente->nombre_completo ?? '-' }}</td>
                 <td>{{ $p->tipo_instalacion }}</td>
                 <td>{{ Str::limit($p->direccion, 25) }}</td>
                 <td>{{ $p->fecha_inicio }}</td>
                 <td>{{ $p->fecha_fin }}</td>
-                <td>{{ $p->responsable_id }}</td>
+                <td>{{ $p->responsable->nombre ?? '-' }}</td>
                 <td>
                     <span class="badge
                         @if($p->estatus == 'Planeado') bg-secondary
@@ -116,10 +122,33 @@
     <div>
         {{ $cableados->links() }}
     </div>
+
+    {{-- Kanban de seguimiento --}}
+    <h3 class="mt-5 mb-3">Seguimiento Kanban</h3>
+    <div class="d-flex gap-3 flex-wrap">
+        @php
+            $estados = ['Planeado', 'En curso', 'Finalizado'];
+        @endphp
+
+        @foreach($estados as $estado)
+            <div class="kanban-column p-3 border rounded" style="flex: 1; min-width: 250px; max-height: 600px; overflow-y: auto;">
+                <h5 class="text-center">{{ $estado }}</h5>
+                <div class="kanban-list" data-estado="{{ $estado }}">
+                    @foreach($cableados->where('estatus', $estado) as $proyecto)
+                        <div class="kanban-card p-2 mb-2 border rounded bg-light" data-id="{{ $proyecto->id }}" style="cursor: grab;">
+                            <strong>{{ $proyecto->nombre_proyecto }}</strong><br>
+                            <small>{{ $proyecto->cliente->nombre_completo ?? '-' }}</small>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    </div>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
     // === Gráfico de ESTADO ===
     @php
@@ -148,7 +177,7 @@
         $dataCliente = $cableados->groupBy('cliente_id')
             ->map(fn($items) => $items->count());
         $clientesNombres = $cableados->mapWithKeys(function($item){
-            return [$item->cliente_id => $item->cliente->nombre ?? 'Sin cliente'];
+            return [$item->cliente_id => $item->cliente->nombre_completo ?? 'Sin cliente'];
         });
     @endphp
     const ctxCliente = document.getElementById('graficoCliente').getContext('2d');
@@ -168,6 +197,38 @@
                 legend: { display: false }
             }
         }
+    });
+
+    // === Kanban Drag & Drop con SortableJS ===
+    document.querySelectorAll('.kanban-list').forEach(list => {
+        new Sortable(list, {
+            group: 'kanban',
+            animation: 150,
+            onEnd: function(evt) {
+                const proyectoId = evt.item.dataset.id;
+                const nuevoEstado = evt.to.dataset.estado;
+
+                fetch(`/cableado/${proyectoId}/estado`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({ estatus: nuevoEstado }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(!data.success) {
+                        alert('Error al actualizar estado');
+                        location.reload();
+                    }
+                })
+                .catch(() => {
+                    alert('Error en la conexión');
+                    location.reload();
+                });
+            }
+        });
     });
 </script>
 @endpush

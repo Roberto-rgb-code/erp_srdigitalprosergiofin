@@ -9,18 +9,19 @@ class DetalleVenta extends Model
     protected $table = 'detalle_ventas';
     protected $fillable = [
         'venta_id',
-        'producto_id',
-        'producto_nombre', // si usas producto libre/captura manual
+        'sku',
+        'no_serie',
+        'nombre_producto',   // <--- este es el correcto para lo que usas
+        'precio_costo',
+        'precio_venta',
         'cantidad',
-        'precio_unitario',
         'subtotal',
-        // agrega más campos si tienes
     ];
+
+    public $timestamps = false; // Si tu tabla no tiene created_at/updated_at
 
     public function producto()
     {
-        // Relación estándar: muchos detalles pertenecen a un producto
-        // Si producto_id es nullable o el producto puede ser libre, esta relación puede ser null.
-        return $this->belongsTo(Producto::class, 'producto_id');
+        return $this->belongsTo(Producto::class, 'sku', 'sku');
     }
 }

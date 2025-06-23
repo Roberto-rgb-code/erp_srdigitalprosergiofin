@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Cableado extends Model
 {
-    protected $table = 'cableado';
+    use HasFactory;
 
     protected $fillable = [
         'cliente_id',
@@ -16,16 +17,22 @@ class Cableado extends Model
         'descripcion',
         'fecha_inicio',
         'fecha_fin',
-        'responsable',     // <--- Texto
+        'responsable_id',
         'costo_estimado',
         'costo_real',
         'estatus',
-        'comentarios'
+        'comentarios',
     ];
 
-    public $timestamps = false;
-
-    public function cliente() {
+    // Relación con Cliente
+    public function cliente()
+    {
         return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
+
+    // Relación con Empleado (responsable)
+    public function responsable()
+    {
+        return $this->belongsTo(Empleado::class, 'responsable_id');
     }
 }

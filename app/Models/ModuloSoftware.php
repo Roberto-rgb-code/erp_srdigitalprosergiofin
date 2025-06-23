@@ -7,27 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class ModuloSoftware extends Model
 {
     protected $table = 'modulos_software';
+
     protected $fillable = [
         'desarrollo_software_id',
         'nombre',
-        'porcentaje_avance',
-        'fase'
+        'descripcion',
     ];
-    public $timestamps = false;
 
-    // Relaciones
-    public function proyecto()
-    {
-        return $this->belongsTo(DesarrolloSoftware::class, 'desarrollo_software_id');
-    }
+    public $timestamps = true;
 
-    public function entregas()
+    public function desarrolloSoftware()
     {
-        return $this->hasMany(EntregaModulo::class, 'modulo_software_id');
-    }
-
-    public function feedbacks()
-    {
-        return $this->hasMany(FeedbackCliente::class, 'modulo_software_id');
+        return $this->belongsTo(\App\Models\DesarrolloSoftware::class, 'desarrollo_software_id');
     }
 }

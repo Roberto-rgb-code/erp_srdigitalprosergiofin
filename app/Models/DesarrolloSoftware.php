@@ -11,7 +11,7 @@ class DesarrolloSoftware extends Model
     protected $fillable = [
         'cliente_id',
         'nombre',
-        'tipo_software_id',
+        'tipo_software', // texto libre
         'stack_tecnologico',
         'fecha_inicio',
         'fecha_fin',
@@ -19,25 +19,16 @@ class DesarrolloSoftware extends Model
         'estado',
         'historial'
     ];
-    public $timestamps = false;
+
+    public $timestamps = true; // Si usas timestamps
 
     public function cliente()
     {
         return $this->belongsTo(\App\Models\Cliente::class, 'cliente_id');
     }
 
-    public function tipoSoftware()
-    {
-        return $this->belongsTo(\App\Models\TipoSoftware::class, 'tipo_software_id');
-    }
-
     public function responsable()
     {
         return $this->belongsTo(\App\Models\Empleado::class, 'responsable_id');
-    }
-
-    public function modulos()
-    {
-        return $this->hasMany(\App\Models\ModuloSoftware::class, 'desarrollo_software_id');
     }
 }

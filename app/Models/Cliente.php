@@ -2,37 +2,32 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Cliente extends Model
 {
-    protected $table = 'clientes';
+    use HasFactory;
 
-    // Lista de campos que se pueden asignar masivamente
     protected $fillable = [
-        'nombre',
-        'rfc',
-        'direccion',
+        'nombre_completo',
+        'empresa',
         'contacto',
+        'direccion',
         'tipo_cliente',
-        'limite_credito',
-        'saldo',
-        'ejecutivo_id',
         'status',
+        // agrega otros campos si los usas
     ];
 
-    // Si tu tabla NO tiene created_at/updated_at
-    public $timestamps = false;
-
-    // Folio automático usando el id
-    public function getFolioAttribute()
+    // Relación uno a uno con datos fiscales
+    public function datoFiscal()
     {
-        return 'CL-' . str_pad($this->id, 5, '0', STR_PAD_LEFT);
+        return $this->hasOne(DatoFiscalCliente::class, 'cliente_id');
     }
 
-    // Si quieres la relación con empleados (ejecutivo)
-    public function ejecutivo()
+    // Relación uno a muchos con ventas
+    public function ventas()
     {
-        return $this->belongsTo(\App\Models\Empleado::class, 'ejecutivo_id');
+        return $this->hasMany(Venta::class, 'cliente_id');
     }
 }

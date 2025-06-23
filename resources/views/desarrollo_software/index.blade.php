@@ -61,7 +61,7 @@
     </div>
 
     {{-- TABLA DE PROYECTOS --}}
-    <div class="table-responsive shadow rounded">
+    <div class="table-responsive shadow rounded mb-5">
         <table class="table table-bordered align-middle bg-white">
             <thead class="table-light">
                 <tr>
@@ -79,8 +79,8 @@
                 @foreach($proyectos as $p)
                     <tr>
                         <td><a href="{{ route('desarrollo_software.show', $p) }}">{{ $p->nombre }}</a></td>
-                        <td>{{ $p->cliente->nombre ?? '-' }}</td>
-                        <td>{{ $p->tipoSoftware->nombre ?? '-' }}</td>
+                        <td>{{ $p->cliente->nombre_completo ?? '-' }}</td>
+                        <td>{{ $p->tipo_software ?? '-' }}</td>
                         <td>{{ $p->responsable->nombre ?? '-' }}</td>
                         <td>
                             @php
@@ -110,11 +110,33 @@
             {{ $proyectos->links() }}
         </div>
     </div>
+
+    {{-- KANBAN --}}
+    <h3>Seguimiento Kanban</h3>
+    <div class="kanban-board d-flex gap-3 flex-wrap">
+        @php
+            $estados = ['Planeado', 'En desarrollo', 'Testing', 'Finalizado'];
+        @endphp
+        @foreach ($estados as $estado)
+            <div class="kanban-column p-2 border rounded" style="flex: 1; min-width: 250px; max-height: 600px; overflow-y: auto;">
+                <h5 class="text-center">{{ $estado }}</h5>
+                <div class="kanban-list" data-estado="{{ $estado }}">
+                    @foreach($proyectos->where('estado', $estado) as $proyecto)
+                        <div class="kanban-card p-2 mb-2 border rounded bg-light" data-id="{{ $proyecto->id }}" style="cursor: grab;">
+                            <strong>{{ $proyecto->nombre }}</strong><br>
+                            <small>{{ $proyecto->cliente->nombre_completo ?? '-' }}</small>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 @if(!empty($graficoEstados))
     const ctx = document.getElementById('graficoEstados').getContext('2d');
@@ -136,5 +158,37 @@
         }
     });
 @endif
+
+// Kanban Drag & Drop con SortableJS
+document.querySelectorAll('.kanban-list').forEach(list => {
+    new Sortable(list, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            const proyectoId = evt.item.dataset.id;
+            const nuevoEstado = evt.to.dataset.estado;
+
+            fetch(`/desarrollo_software/${proyectoId}/estado`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                },
+                body: JSON.stringify({ estado: nuevoEstado }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(!data.success) {
+                    alert('Error al actualizar estado');
+                    location.reload();
+                }
+            })
+            .catch(() => {
+                alert('Error en la conexión');
+                location.reload();
+            });
+        }
+    });
+});
 </script>
 @endpush
