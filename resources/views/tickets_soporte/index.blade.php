@@ -1,42 +1,49 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container">
-    <h2>Tickets de Soporte — Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b></h2>
-    <a href="{{ route('servicios_empresariales.tickets_soporte.create', $servicio->id) }}" class="btn btn-primary mb-2">Nuevo Ticket</a>
+    <h1>Tickets de Soporte (Servicio #{{ $servicio->id }})</h1>
+    <a href="{{ route('tickets_soporte.create', $servicio->id) }}" class="btn btn-primary mb-3">Nuevo Ticket</a>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <table class="table table-bordered table-striped">
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Cliente</th>
                 <th>Título</th>
-                <th>Estatus</th>
+                <th>Estado</th>
+                <th>Prioridad</th>
+                <th>Fecha Apertura</th>
+                <th>Fecha Cierre</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-        @foreach($tickets as $t)
+            @foreach($tickets as $ticket)
             <tr>
-                <td>{{ $t->id }}</td>
-                <td>{{ $t->cliente->nombre ?? '' }}</td>
-                <td>{{ $t->titulo }}</td>
-                <td>{{ $t->estatus }}</td>
+                <td>{{ $ticket->id }}</td>
+                <td>{{ $ticket->titulo }}</td>
+                <td>{{ $ticket->estado }}</td>
+                <td>{{ $ticket->prioridad }}</td>
+                <td>{{ $ticket->fecha_apertura->format('Y-m-d') }}</td>
+                <td>{{ $ticket->fecha_cierre ? $ticket->fecha_cierre->format('Y-m-d') : '-' }}</td>
                 <td>
-                    <a href="{{ route('servicios_empresariales.tickets_soporte.show', [$servicio->id, $t->id]) }}" class="btn btn-info btn-sm">Ver</a>
-                    <a href="{{ route('servicios_empresariales.tickets_soporte.edit', [$servicio->id, $t->id]) }}" class="btn btn-warning btn-sm">Editar</a>
-                    <form action="{{ route('servicios_empresariales.tickets_soporte.destroy', [$servicio->id, $t->id]) }}" method="POST" style="display:inline;">
-                        @csrf @method('DELETE')
-                        <button onclick="return confirm('¿Seguro?')" class="btn btn-danger btn-sm">Eliminar</button>
+                    <a href="{{ route('tickets_soporte.edit', [$servicio->id, $ticket->id]) }}" class="btn btn-warning btn-sm">Editar</a>
+                    <form action="{{ route('tickets_soporte.destroy', [$servicio->id, $ticket->id]) }}" method="POST" style="display:inline-block;">
+                        @csrf
+                        @method('DELETE')
+                        <button onclick="return confirm('¿Eliminar ticket?')" class="btn btn-danger btn-sm">Eliminar</button>
                     </form>
                 </td>
             </tr>
-        @endforeach
+            @endforeach
         </tbody>
     </table>
+
+    {{ $tickets->links() }}
+
+    <a href="{{ route('servicios_empresariales.index') }}" class="btn btn-secondary mt-3">Volver a Servicios Empresariales</a>
 </div>
 @endsection

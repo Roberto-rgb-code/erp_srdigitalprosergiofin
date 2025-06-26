@@ -1,19 +1,38 @@
 <?php
 
-// app/Models/DatoFiscalCliente.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DatoFiscalCliente extends Model
+class CuentaPorPagar extends Model
 {
+    protected $table = 'cuentas_por_pagar';
+
     protected $fillable = [
-        'cliente_id', 'nombre_fiscal', 'rfc', 'direccion_fiscal', 'uso_cfdi', 'correo', 'regimen_fiscal'
+        'proveedor_id',
+        'folio_factura',
+        'monto',
+        'fecha_emision',
+        'fecha_vencimiento',
+        'saldo_pendiente',
+        'estatus',         // pendiente, pagada, parcial, vencida, etc.
+        'xml_path',
+        'pdf_path',
+        'comentarios'
     ];
 
-    public function cliente()
+    public function proveedor()
     {
-        return $this->belongsTo(Cliente::class);
+        return $this->belongsTo(Proveedor::class, 'proveedor_id');
+    }
+
+    public function pagos()
+    {
+        return $this->hasMany(PagoCxp::class, 'cuenta_pagar_id');
+    }
+
+    public function seguimientos()
+    {
+        return $this->hasMany(SeguimientoCxp::class, 'cuenta_pagar_id');
     }
 }
-

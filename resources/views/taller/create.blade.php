@@ -21,7 +21,9 @@
             <select name="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
                 <option value="">Seleccione cliente...</option>
                 @foreach($clientes as $cl)
-                    <option value="{{ $cl->id }}" @selected(old('cliente_id') == $cl->id)>{{ $cl->nombre }}</option>
+                    <option value="{{ $cl->id }}" @selected(old('cliente_id') == $cl->id)>
+                        {{ $cl->nombre_completo }}@if(!empty($cl->empresa)) ({{ $cl->empresa }})@endif
+                    </option>
                 @endforeach
             </select>
             @error('cliente_id') <div class="invalid-feedback">{{ $message }}</div> @enderror

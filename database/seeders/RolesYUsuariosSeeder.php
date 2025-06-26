@@ -15,6 +15,8 @@ class RolesYUsuariosSeeder extends Seeder
         $permisos = [
             'ver', 'crear', 'editar', 'eliminar', 'exportar', 'aprobar', 'configurar'
         ];
+
+        // Módulos del sidebar + módulos nuevos
         $modulos = [
             'clientes',
             'ventas',
@@ -27,7 +29,12 @@ class RolesYUsuariosSeeder extends Seeder
             'servicios empresariales',
             'cuentas x cobrar',
             'cuentas x pagar',
-            'contabilidad'
+            'contabilidad',
+            // Agregados
+            'personal',
+            'compras',
+            'punto_venta',
+            'creditos',
         ];
 
         foreach ($modulos as $modulo) {
@@ -36,7 +43,7 @@ class RolesYUsuariosSeeder extends Seeder
             }
         }
 
-        // 2. Roles y los módulos a los que tienen acceso
+        // 2. Roles y módulos a los que tienen acceso (agrega roles según tu estructura)
         $roles = [
             'Administrador General' => ['todos'],
             'Tesorería' => ['finanzas', 'cuentas x cobrar', 'cuentas x pagar'],
@@ -50,7 +57,12 @@ class RolesYUsuariosSeeder extends Seeder
             'Capturista Servicio Empresarial' => ['servicios empresariales'],
             'Capturista Desarrollo de Software' => ['desarrollo de software'],
             'Capturista Instalaciones' => ['cableado estructurado'],
-            'Comodín' => ['comodin'], // Puedes agregar lógica especial si tienes permisos especiales
+            // Nuevos ejemplos de roles para módulos agregados:
+            'Supervisor de Personal' => ['personal'],
+            'Compras' => ['compras'],
+            'Punto de Venta' => ['punto_venta'],
+            'Créditos' => ['creditos'],
+            'Comodín' => ['comodin'],
         ];
 
         foreach ($roles as $rol => $modulos_rol) {
@@ -71,9 +83,8 @@ class RolesYUsuariosSeeder extends Seeder
             }
         }
 
-        // 3. Usuarios con contraseñas únicas por usuario
+        // 3. Usuarios con contraseñas únicas por usuario (agrega si tienes roles nuevos)
         $users = [
-            // name, email, password, role
             ['name' => 'Kevin Dirección',      'email' => 'direccion@erp.com',       'password' => 'kd123456', 'role' => 'Administrador General'],
             ['name' => 'Tesorera',             'email' => 'tesoreria@erp.com',       'password' => 'teso456',  'role' => 'Tesorería'],
             ['name' => 'Contador',             'email' => 'contabilidad@erp.com',    'password' => 'conta456', 'role' => 'Contador'],
@@ -86,6 +97,11 @@ class RolesYUsuariosSeeder extends Seeder
             ['name' => 'Capturista SEmp',      'email' => 'capturistaemp@erp.com',   'password' => 'csemp123', 'role' => 'Capturista Servicio Empresarial'],
             ['name' => 'Capturista Soft',      'email' => 'capturistadev@erp.com',   'password' => 'csoft123', 'role' => 'Capturista Desarrollo de Software'],
             ['name' => 'Capturista Inst',      'email' => 'capturistainst@erp.com',  'password' => 'cinst123', 'role' => 'Capturista Instalaciones'],
+            // Nuevos usuarios ejemplo (puedes quitar/modificar según tu necesidad)
+            ['name' => 'Supervisor Personal',  'email' => 'personal@erp.com',        'password' => 'pers123',  'role' => 'Supervisor de Personal'],
+            ['name' => 'Compras',              'email' => 'compras@erp.com',         'password' => 'compras1', 'role' => 'Compras'],
+            ['name' => 'Punto de Venta',       'email' => 'pos@erp.com',             'password' => 'pos12345', 'role' => 'Punto de Venta'],
+            ['name' => 'Créditos',             'email' => 'creditos@erp.com',        'password' => 'cred123',  'role' => 'Créditos'],
             ['name' => 'Comodín',              'email' => 'comodin@erp.com',         'password' => 'comodin77','role' => 'Comodín'],
         ];
 

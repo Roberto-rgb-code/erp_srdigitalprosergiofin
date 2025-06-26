@@ -2,22 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class InventarioCliente extends Model
 {
-    protected $table = 'inventario_clientes';
+    use HasFactory;
+
     protected $fillable = [
-        'servicios_empresariales_id', 'cliente_id', 'nombre_equipo', 'tipo_equipo', 'modelo', 'serie'
+        'servicio_empresarial_id',
+        'nombre_equipo',
+        'descripcion',
+        'numero_serie'
     ];
 
-    // Relación con ServicioEmpresarial
-    public function servicioEmpresarial() {
-        return $this->belongsTo(ServicioEmpresarial::class, 'servicios_empresariales_id');
-    }
-
-    // Relación con Cliente
-    public function cliente() {
-        return $this->belongsTo(Cliente::class, 'cliente_id');
+    public function servicioEmpresarial()
+    {
+        return $this->belongsTo(ServicioEmpresarial::class, 'servicio_empresarial_id');
     }
 }

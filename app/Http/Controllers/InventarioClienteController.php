@@ -3,67 +3,70 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventarioCliente;
-use App\Models\Cliente;
+use App\Models\ServicioEmpresarial;
 use Illuminate\Http\Request;
 
 class InventarioClienteController extends Controller
 {
+    // Listar inventarios (puedes ajustar según necesidad)
     public function index()
     {
-        $equipos = InventarioCliente::with('cliente')->orderByDesc('id')->get();
-        return view('inventario_clientes.index', compact('equipos'));
+        $inventarios = InventarioCliente::with('servicio')->paginate(15);
+        return view('inventario_clientes.index', compact('inventarios'));
     }
 
+    // Mostrar formulario para crear nuevo inventario
     public function create()
     {
-        $clientes = Cliente::all();
-        return view('inventario_clientes.create', compact('clientes'));
+        $servicios = ServicioEmpresarial::with('cliente')->get();
+        return view('inventario_clientes.create', compact('servicios'));
     }
 
+    // Guardar inventario nuevo
     public function store(Request $request)
     {
-        $request->validate([
-            'cliente_id'    => 'required|exists:clientes,id',
-            'nombre_equipo' => 'required|string|max:80',
-            'tipo_equipo'   => 'nullable|string|max:50',
-            'modelo'        => 'nullable|string|max:50',
-            'serie'         => 'nullable|string|max:50',
-            'ubicacion'     => 'nullable|string|max:100',
+        $validated = $request->validate([
+            'servicio_empresarial_id' => 'required|exists:servicios_empresariales,id',
+            'nombre_equipo'           => 'required|string|max:255',
+            'descripcion'             => 'nullable|string',
+            'numero_serie'            => 'nullable|string|max:255',
         ]);
-        InventarioCliente::create($request->all());
-        return redirect()->route('inventario_clientes.index')->with('success', 'Equipo registrado');
+
+        InventarioCliente::create($validated);
+
+        return redirect()->route('inventario_clientes.index')
+            ->with('success', 'Inventario creado correctamente');
     }
 
-    public function show(InventarioCliente $inventario_cliente)
-    {
-        $equipo = $inventario_cliente->load('cliente');
-        return view('inventario_clientes.show', compact('equipo'));
-    }
-
+    // Mostrar formulario para editar inventario
     public function edit(InventarioCliente $inventario_cliente)
     {
-        $equipo = $inventario_cliente;
-        $clientes = Cliente::all();
-        return view('inventario_clientes.edit', compact('equipo', 'clientes'));
+        $servicios = ServicioEmpresarial::with('cliente')->get();
+        return view('inventario_clientes.edit', compact('inventario_cliente', 'servicios'));
     }
 
+    // Actualizar inventario
     public function update(Request $request, InventarioCliente $inventario_cliente)
     {
-        $request->validate([
-            'cliente_id'    => 'required|exists:clientes,id',
-            'nombre_equipo' => 'required|string|max:80',
-            'tipo_equipo'   => 'nullable|string|max:50',
-            'modelo'        => 'nullable|string|max:50',
-            'serie'         => 'nullable|string|max:50',
-            'ubicacion'     => 'nullable|string|max:100',
+        $validated = $request->validate([
+            'servicio_empresarial_id' => 'required|exists:servicios_empresariales,id',
+            'nombre_equipo'           => 'required|string|max:255',
+            'descripcion'             => 'nullable|string',
+            'numero_serie'            => 'nullable|string|max:255',
         ]);
-        $inventario_cliente->update($request->all());
-        return redirect()->route('inventario_clientes.index')->with('success', 'Equipo actualizado');
+
+        $inventario_cliente->update($validated);
+
+        return redirect()->route('inventario_clientes.index')
+            ->with('success', 'Inventario actualizado correctamente');
     }
 
+    // Eliminar inventario
     public function destroy(InventarioCliente $inventario_cliente)
     {
         $inventario_cliente->delete();
-        return redirect()->route('inventario_clientes.index')->with('success', 'Equipo eliminado');
+
+        return redirect()->route('inventario_clientes.index')
+            ->with('success', 'Inventario eliminado correctamente');
     }
 }

@@ -9,24 +9,16 @@ class UsuarioCliente extends Model
 {
     use HasFactory;
 
-    protected $table = 'usuario_clientes';
-
     protected $fillable = [
         'servicio_empresarial_id',
-        'cliente_id',
-        'nombre',
-        'rol',
-        'usuario',
+        'nombre_usuario',
+        'email',
         'password',
+        'comentarios',
     ];
-
-    public function cliente()
-    {
-        return $this->belongsTo(Cliente::class);
-    }
 
     public function servicioEmpresarial()
     {
-        return $this->belongsTo(ServicioEmpresarial::class);
+        return $this->belongsTo(ServicioEmpresarial::class, 'servicio_empresarial_id');
     }
 }

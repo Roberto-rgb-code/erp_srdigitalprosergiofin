@@ -3,93 +3,75 @@
 namespace App\Http\Controllers;
 
 use App\Models\ConfiguracionCliente;
-use App\Models\Cliente;
 use App\Models\ServicioEmpresarial;
 use Illuminate\Http\Request;
 
 class ConfiguracionClienteController extends Controller
 {
-    public function index($servicios_empresariales)
+    public function index($servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $configuraciones = ConfiguracionCliente::with('cliente')
-            ->where('servicio_empresarial_id', $servicio->id)
-            ->orderByDesc('id')
-            ->get();
-
-        return view('configuraciones_clientes.index', compact('configuraciones', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $configuraciones = ConfiguracionCliente::where('servicio_empresarial_id', $servicio_empresarial_id)->get();
+        return view('configuracion_clientes.index', compact('servicio', 'configuraciones'));
     }
 
-    public function create($servicios_empresariales)
+    public function create($servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $clientes = Cliente::all();
-        return view('configuraciones_clientes.create', compact('clientes', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        return view('configuracion_clientes.create', compact('servicio'));
     }
 
-    public function store(Request $request, $servicios_empresariales)
+    public function store(Request $request, $servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $request->validate([
-            'cliente_id'  => 'required|exists:clientes,id',
-            'tipo'        => 'required|string|max:50',
-            'descripcion' => 'nullable|string|max:120',
-            'dato'        => 'required|string|max:120',
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $validated = $request->validate([
+            'parametro'   => 'required|string|max:255',
+            'valor'    => 'nullable|string|max:255',
         ]);
-        ConfiguracionCliente::create([
-            'servicio_empresarial_id' => $servicio->id,
-            'cliente_id'  => $request->cliente_id,
-            'tipo'        => $request->tipo,
-            'descripcion' => $request->descripcion,
-            'dato'        => $request->dato,
+        $validated['servicio_empresarial_id'] = $servicio->id;
+        ConfiguracionCliente::create($validated);
+
+        return redirect()
+            ->route('servicios_empresariales.configuraciones_clientes.index', $servicio->id)
+            ->with('success', 'Configuración creada correctamente');
+    }
+
+    public function edit($servicio_empresarial_id, $config_id)
+    {
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $configuracion = ConfiguracionCliente::where('servicio_empresarial_id', $servicio->id)
+                                       ->where('id', $config_id)
+                                       ->firstOrFail();
+        return view('configuracion_clientes.edit', compact('servicio', 'configuracion'));
+    }
+
+    public function update(Request $request, $servicio_empresarial_id, $config_id)
+    {
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $configuracion = ConfiguracionCliente::where('servicio_empresarial_id', $servicio->id)
+                                       ->where('id', $config_id)
+                                       ->firstOrFail();
+        $validated = $request->validate([
+            'parametro'   => 'required|string|max:255',
+            'valor'    => 'nullable|string|max:255',
         ]);
-        return redirect()->route('servicios_empresariales.configuraciones_clientes.index', $servicio->id)
-            ->with('success', 'Configuración registrada');
+        $configuracion->update($validated);
+
+        return redirect()
+            ->route('servicios_empresariales.configuraciones_clientes.index', $servicio->id)
+            ->with('success', 'Configuración actualizada correctamente');
     }
 
-    public function show($servicios_empresariales, $id)
+    public function destroy($servicio_empresarial_id, $config_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $configuracion = ConfiguracionCliente::with('cliente')
-            ->where('servicio_empresarial_id', $servicio->id)
-            ->findOrFail($id);
-        return view('configuraciones_clientes.show', compact('configuracion', 'servicio'));
-    }
-
-    public function edit($servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $configuracion = ConfiguracionCliente::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-        $clientes = Cliente::all();
-        return view('configuraciones_clientes.edit', compact('configuracion', 'clientes', 'servicio'));
-    }
-
-    public function update(Request $request, $servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $configuracion = ConfiguracionCliente::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-        $request->validate([
-            'cliente_id'  => 'required|exists:clientes,id',
-            'tipo'        => 'required|string|max:50',
-            'descripcion' => 'nullable|string|max:120',
-            'dato'        => 'required|string|max:120',
-        ]);
-        $configuracion->update([
-            'cliente_id'  => $request->cliente_id,
-            'tipo'        => $request->tipo,
-            'descripcion' => $request->descripcion,
-            'dato'        => $request->dato,
-        ]);
-        return redirect()->route('servicios_empresariales.configuraciones_clientes.index', $servicio->id)
-            ->with('success', 'Configuración actualizada');
-    }
-
-    public function destroy($servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $configuracion = ConfiguracionCliente::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $configuracion = ConfiguracionCliente::where('servicio_empresarial_id', $servicio->id)
+                                       ->where('id', $config_id)
+                                       ->firstOrFail();
         $configuracion->delete();
-        return redirect()->route('servicios_empresariales.configuraciones_clientes.index', $servicio->id)
-            ->with('success', 'Configuración eliminada');
+
+        return redirect()
+            ->route('servicios_empresariales.configuraciones_clientes.index', $servicio->id)
+            ->with('success', 'Configuración eliminada correctamente');
     }
 }

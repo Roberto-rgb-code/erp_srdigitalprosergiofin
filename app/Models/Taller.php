@@ -29,7 +29,7 @@ class Taller extends Model
         'status'
     ];
 
-    public $timestamps = false; // Si tu tabla NO tiene created_at, updated_at. Si los agregas, cambia a true.
+    public $timestamps = false; // Cambia a true si agregas created_at/updated_at
 
     // Relaciones
     public function cliente()
@@ -47,7 +47,18 @@ class Taller extends Model
         return $this->belongsTo(\App\Models\Empleado::class, 'tecnico_id');
     }
 
-    // Folio autogenerado virtualmente, para mostrar en views (no está en la tabla)
+    // NUEVAS RELACIONES PARA LOS TABS
+    public function refacciones()
+    {
+        return $this->hasMany(\App\Models\Refaccion::class, 'taller_id');
+    }
+
+    public function evidencias()
+    {
+        return $this->hasMany(\App\Models\Evidencia::class, 'taller_id');
+    }
+
+    // Folio virtual (no es columna en la base)
     public function getFolioAttribute()
     {
         return 'OS-' . str_pad($this->id, 5, '0', STR_PAD_LEFT);

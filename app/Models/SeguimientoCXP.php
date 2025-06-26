@@ -4,24 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SeguimientoCXP extends Model
+class SeguimientoCxp extends Model
 {
     protected $table = 'seguimientos_cxp';
+
     protected $fillable = [
-        'cuenta_por_pagar_id',
-        'usuario_id',
-        'tipo',
-        'descripcion',
-        'fecha'
+        'cuenta_pagar_id',
+        'fecha',
+        'comentario',
+        'tipo',             // alerta, aviso, recordatorio, etc.
+        'porcentaje_impacto'
     ];
 
     public function cuentaPorPagar()
     {
-        return $this->belongsTo(CuentaPorPagar::class, 'cuenta_por_pagar_id');
-    }
-
-    public function usuario()
-    {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
+        return $this->belongsTo(CuentaPorPagar::class, 'cuenta_pagar_id');
     }
 }

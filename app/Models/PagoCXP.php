@@ -4,20 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PagoCXP extends Model
+class PagoCxp extends Model
 {
     protected $table = 'pagos_cxp';
+
     protected $fillable = [
-        'cuenta_por_pagar_id',
+        'cuenta_pagar_id',
+        'fecha_pago',
         'monto',
-        'fecha',
-        'tipo',
-        'comentarios',
-        'comprobante'
+        'comprobante_path',
+        'comentarios'
     ];
 
     public function cuentaPorPagar()
     {
-        return $this->belongsTo(CuentaPorPagar::class, 'cuenta_por_pagar_id');
+        return $this->belongsTo(CuentaPorPagar::class, 'cuenta_pagar_id');
     }
 }

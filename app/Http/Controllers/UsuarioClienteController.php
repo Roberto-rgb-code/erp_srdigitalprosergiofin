@@ -3,101 +3,75 @@
 namespace App\Http\Controllers;
 
 use App\Models\UsuarioCliente;
-use App\Models\Cliente;
 use App\Models\ServicioEmpresarial;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UsuarioClienteController extends Controller
 {
-    public function index($servicios_empresariales)
+    public function index($servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $usuarios = UsuarioCliente::with('cliente')
-            ->where('servicio_empresarial_id', $servicio->id)
-            ->orderByDesc('id')
-            ->get();
-
-        return view('usuarios_clientes.index', compact('usuarios', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $usuarios = UsuarioCliente::where('servicio_empresarial_id', $servicio_empresarial_id)->get();
+        return view('usuario_clientes.index', compact('servicio', 'usuarios'));
     }
 
-    public function create($servicios_empresariales)
+    public function create($servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $clientes = Cliente::all();
-        return view('usuarios_clientes.create', compact('clientes', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        return view('usuario_clientes.create', compact('servicio'));
     }
 
-    public function store(Request $request, $servicios_empresariales)
+    public function store(Request $request, $servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $request->validate([
-            'cliente_id' => 'required|exists:clientes,id',
-            'nombre'     => 'required|string|max:80',
-            'rol'        => 'nullable|string|max:50',
-            'usuario'    => 'required|string|max:60',
-            'password'   => 'required|string|max:100',
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $validated = $request->validate([
+            'nombre'   => 'required|string|max:255',
+            'email'    => 'nullable|email|max:255',
         ]);
-        UsuarioCliente::create([
-            'servicio_empresarial_id' => $servicio->id,
-            'cliente_id' => $request->cliente_id,
-            'nombre'     => $request->nombre,
-            'rol'        => $request->rol,
-            'usuario'    => $request->usuario,
-            'password'   => Hash::make($request->password), // Importante: Hashea la contraseña
+        $validated['servicio_empresarial_id'] = $servicio->id;
+        UsuarioCliente::create($validated);
+
+        return redirect()
+            ->route('servicios_empresariales.usuarios_clientes.index', $servicio->id)
+            ->with('success', 'Usuario creado correctamente');
+    }
+
+    public function edit($servicio_empresarial_id, $usuario_id)
+    {
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $usuario = UsuarioCliente::where('servicio_empresarial_id', $servicio->id)
+                                       ->where('id', $usuario_id)
+                                       ->firstOrFail();
+        return view('usuario_clientes.edit', compact('servicio', 'usuario'));
+    }
+
+    public function update(Request $request, $servicio_empresarial_id, $usuario_id)
+    {
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $usuario = UsuarioCliente::where('servicio_empresarial_id', $servicio->id)
+                                       ->where('id', $usuario_id)
+                                       ->firstOrFail();
+        $validated = $request->validate([
+            'nombre'   => 'required|string|max:255',
+            'email'    => 'nullable|email|max:255',
         ]);
-        return redirect()->route('servicios_empresariales.usuarios_clientes.index', $servicio->id)
-            ->with('success', 'Usuario registrado');
+        $usuario->update($validated);
+
+        return redirect()
+            ->route('servicios_empresariales.usuarios_clientes.index', $servicio->id)
+            ->with('success', 'Usuario actualizado correctamente');
     }
 
-    public function show($servicios_empresariales, $id)
+    public function destroy($servicio_empresarial_id, $usuario_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $usuario = UsuarioCliente::with('cliente')->where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-        return view('usuarios_clientes.show', compact('usuario', 'servicio'));
-    }
-
-    public function edit($servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $usuario = UsuarioCliente::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-        $clientes = Cliente::all();
-        return view('usuarios_clientes.edit', compact('usuario', 'clientes', 'servicio'));
-    }
-
-    public function update(Request $request, $servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $usuario = UsuarioCliente::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-
-        $request->validate([
-            'cliente_id' => 'required|exists:clientes,id',
-            'nombre'     => 'required|string|max:80',
-            'rol'        => 'nullable|string|max:50',
-            'usuario'    => 'required|string|max:60',
-            'password'   => 'nullable|string|max:100', // Opcional en edición
-        ]);
-
-        $usuario->cliente_id = $request->cliente_id;
-        $usuario->nombre = $request->nombre;
-        $usuario->rol = $request->rol;
-        $usuario->usuario = $request->usuario;
-
-        if ($request->filled('password')) {
-            $usuario->password = Hash::make($request->password);
-        }
-        $usuario->save();
-
-        return redirect()->route('servicios_empresariales.usuarios_clientes.index', $servicio->id)
-            ->with('success', 'Usuario actualizado');
-    }
-
-    public function destroy($servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $usuario = UsuarioCliente::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $usuario = UsuarioCliente::where('servicio_empresarial_id', $servicio->id)
+                                       ->where('id', $usuario_id)
+                                       ->firstOrFail();
         $usuario->delete();
-        return redirect()->route('servicios_empresariales.usuarios_clientes.index', $servicio->id)
-            ->with('success', 'Usuario eliminado');
+
+        return redirect()
+            ->route('servicios_empresariales.usuarios_clientes.index', $servicio->id)
+            ->with('success', 'Usuario eliminado correctamente');
     }
 }

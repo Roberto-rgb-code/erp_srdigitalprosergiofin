@@ -6,40 +6,43 @@
         <a href="{{ route('taller.index') }}" class="btn btn-secondary btn-sm">Volver</a>
     </div>
     <div class="card-body">
-        <dl class="row">
-            <dt class="col-sm-3">Cliente</dt>
-            <dd class="col-sm-9">{{ $taller->cliente->nombre ?? '-' }}</dd>
+        {{-- Nav Tabs --}}
+        <ul class="nav nav-tabs" id="tallerTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">Información</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cancelar-tab" data-bs-toggle="tab" data-bs-target="#cancelar" type="button" role="tab">Cancelar servicio</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="refacciones-tab" data-bs-toggle="tab" data-bs-target="#refacciones" type="button" role="tab">Agregar refacciones</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="estado-tab" data-bs-toggle="tab" data-bs-target="#estado" type="button" role="tab">Estado del servicio</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="evidencias-tab" data-bs-toggle="tab" data-bs-target="#evidencias" type="button" role="tab">Evidencias</button>
+            </li>
+        </ul>
 
-            <dt class="col-sm-3">Tipo de Cliente</dt>
-            <dd class="col-sm-9">{{ $taller->tipo_cliente }}</dd>
-
-            <dt class="col-sm-3">Equipo</dt>
-            <dd class="col-sm-9">{{ $taller->equipo->tipo ?? '-' }} {{ $taller->equipo->marca ?? '' }} {{ $taller->equipo->modelo ?? '' }}</dd>
-
-            <dt class="col-sm-3">Técnico</dt>
-            <dd class="col-sm-9">{{ $taller->tecnico->nombre ?? '-' }}</dd>
-
-            <dt class="col-sm-3">Ingreso</dt>
-            <dd class="col-sm-9">{{ $taller->fecha_ingreso }}</dd>
-
-            <dt class="col-sm-3">Entrega</dt>
-            <dd class="col-sm-9">{{ $taller->fecha_entrega }}</dd>
-
-            <dt class="col-sm-3">Detalle del Problema</dt>
-            <dd class="col-sm-9">{{ $taller->detalle_problema }}</dd>
-
-            <dt class="col-sm-3">Solución</dt>
-            <dd class="col-sm-9">{{ $taller->solucion }}</dd>
-
-            <dt class="col-sm-3">Observaciones</dt>
-            <dd class="col-sm-9">{{ $taller->observaciones }}</dd>
-
-            <dt class="col-sm-3">Costo Total</dt>
-            <dd class="col-sm-9">${{ number_format($taller->costo_total,2) }}</dd>
-
-            <dt class="col-sm-3">Anticipo</dt>
-            <dd class="col-sm-9">${{ number_format($taller->anticipo,2) }}</dd>
-        </dl>
+        {{-- Tab Content --}}
+        <div class="tab-content p-3" id="tallerTabContent">
+            <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                @include('taller.partials.info', ['taller' => $taller])
+            </div>
+            <div class="tab-pane fade" id="cancelar" role="tabpanel" aria-labelledby="cancelar-tab">
+                @include('taller.partials.cancelar', ['taller' => $taller])
+            </div>
+            <div class="tab-pane fade" id="refacciones" role="tabpanel" aria-labelledby="refacciones-tab">
+                @include('taller.partials.refacciones', ['taller' => $taller])
+            </div>
+            <div class="tab-pane fade" id="estado" role="tabpanel" aria-labelledby="estado-tab">
+                @include('taller.partials.estado', ['taller' => $taller])
+            </div>
+            <div class="tab-pane fade" id="evidencias" role="tabpanel" aria-labelledby="evidencias-tab">
+                @include('taller.partials.evidencias', ['taller' => $taller])
+            </div>
+        </div>
     </div>
 </div>
 @endsection

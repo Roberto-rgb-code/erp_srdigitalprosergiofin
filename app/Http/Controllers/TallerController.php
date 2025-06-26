@@ -25,13 +25,14 @@ class TallerController extends Controller
     }
 
     public function create()
-    {
-        $clientes = Cliente::orderBy('nombre')->get();
-        $equipos = Equipo::orderBy('marca')->get();
-        $responsables = Empleado::orderBy('nombre')->get();
+{
+    $clientes = Cliente::orderBy('nombre_completo')->get(); // <-- Usa el campo correcto aquí
+    $equipos = Equipo::orderBy('marca')->get();
+    $responsables = Empleado::orderBy('nombre')->get();
 
-        return view('taller.create', compact('clientes', 'equipos', 'responsables'));
-    }
+    return view('taller.create', compact('clientes', 'equipos', 'responsables'));
+}
+
 
     public function store(Request $request)
     {
@@ -62,10 +63,11 @@ class TallerController extends Controller
     }
 
     public function show(Taller $taller)
-    {
-        $taller->load(['cliente', 'equipo', 'tecnico']);
-        return view('taller.show', compact('taller'));
-    }
+{
+    $taller->load(['cliente','equipo','tecnico','refacciones','evidencias']);
+    return view('taller.show', compact('taller'));
+}
+
 
     public function edit(Taller $taller)
     {
@@ -120,4 +122,18 @@ class TallerController extends Controller
         $pdf = PDF::loadView('taller.export_pdf', compact('talleres'));
         return $pdf->download('ordenes_servicio.pdf');
     }
+
+    public function cambiarEstado(Request $request, \App\Models\Taller $taller)
+{
+    $request->validate([
+        'status' => 'required|string|max:50',
+    ]);
+
+    $taller->status = $request->status;
+    $taller->save();
+
+    return redirect()->route('taller.show', $taller)
+        ->with('status_updated', 'Estado actualizado correctamente.');
+}
+
 }

@@ -1,37 +1,26 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container">
-    <h2>Seguimientos de Ticket — Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b></h2>
-    <a href="{{ route('servicios_empresariales.seguimientos_ticket.create', $servicio->id) }}" class="btn btn-primary mb-2">Nuevo Seguimiento</a>
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    <table class="table table-bordered table-striped">
+    <h2>Seguimientos (Servicio #{{ $servicio->id }})</h2>
+    <a href="{{ route('servicios_empresariales.seguimientos_ticket.create', $servicio->id) }}" class="btn btn-primary mb-3">Nuevo Seguimiento</a>
+    @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
+    <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Ticket</th>
-                <th>Cliente</th>
-                <th>Comentario</th>
-                <th>Estatus</th>
-                <th>Acciones</th>
+                <th>Ticket</th><th>Comentario</th><th>Estatus</th><th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-        @foreach($seguimientos as $s)
+        @foreach($seguimientos as $seg)
             <tr>
-                <td>{{ $s->id }}</td>
-                <td>{{ $s->ticket->titulo ?? '' }}</td>
-                <td>{{ $s->cliente->nombre ?? '' }}</td>
-                <td>{{ $s->comentario }}</td>
-                <td>{{ $s->estatus }}</td>
+                <td>{{ $seg->ticket->titulo ?? '-' }}</td>
+                <td>{{ $seg->comentario }}</td>
+                <td>{{ $seg->estatus }}</td>
                 <td>
-                    <a href="{{ route('servicios_empresariales.seguimientos_ticket.show', [$servicio->id, $s->id]) }}" class="btn btn-info btn-sm">Ver</a>
-                    <a href="{{ route('servicios_empresariales.seguimientos_ticket.edit', [$servicio->id, $s->id]) }}" class="btn btn-warning btn-sm">Editar</a>
-                    <form action="{{ route('servicios_empresariales.seguimientos_ticket.destroy', [$servicio->id, $s->id]) }}" method="POST" style="display:inline;">
+                    <a href="{{ route('servicios_empresariales.seguimientos_ticket.edit', [$servicio->id, $seg->id]) }}" class="btn btn-sm btn-warning">Editar</a>
+                    <form action="{{ route('servicios_empresariales.seguimientos_ticket.destroy', [$servicio->id, $seg->id]) }}" method="POST" style="display:inline;">
                         @csrf @method('DELETE')
-                        <button onclick="return confirm('¿Seguro?')" class="btn btn-danger btn-sm">Eliminar</button>
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar seguimiento?')">Eliminar</button>
                     </form>
                 </td>
             </tr>

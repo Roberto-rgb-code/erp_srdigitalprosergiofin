@@ -13,16 +13,15 @@ class TicketSoporte extends Model
 
     protected $fillable = [
         'servicio_empresarial_id',
-        'cliente_id',
         'titulo',
         'descripcion',
-        'estatus'
+        'estado',
+        'prioridad',
+        'fecha_apertura',
+        'fecha_cierre',
+        'asignado_a',
+        'comentarios',
     ];
-
-    public function cliente()
-    {
-        return $this->belongsTo(Cliente::class);
-    }
 
     public function servicioEmpresarial()
     {

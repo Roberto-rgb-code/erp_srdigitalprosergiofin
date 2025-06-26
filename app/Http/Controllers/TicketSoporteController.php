@@ -3,94 +3,87 @@
 namespace App\Http\Controllers;
 
 use App\Models\TicketSoporte;
-use App\Models\Cliente;
 use App\Models\ServicioEmpresarial;
 use Illuminate\Http\Request;
 
 class TicketSoporteController extends Controller
 {
-    public function index($servicios_empresariales)
+    public function index($servicioId)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $tickets = TicketSoporte::with('cliente')
-            ->where('servicio_empresarial_id', $servicio->id)
-            ->orderByDesc('id')
-            ->get();
-
+        $servicio = ServicioEmpresarial::findOrFail($servicioId);
+        $tickets = TicketSoporte::where('servicio_empresarial_id', $servicioId)->paginate(10);
         return view('tickets_soporte.index', compact('tickets', 'servicio'));
     }
 
-    public function create($servicios_empresariales)
+    public function create($servicioId)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $clientes = Cliente::all();
-        return view('tickets_soporte.create', compact('clientes', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicioId);
+        return view('tickets_soporte.create', compact('servicio'));
     }
 
-    public function store(Request $request, $servicios_empresariales)
+    public function store(Request $request, $servicioId)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-
         $request->validate([
-            'cliente_id' => 'required|exists:clientes,id',
-            'titulo'     => 'required|string|max:100',
-            'descripcion'=> 'nullable|string',
-            'estatus'    => 'required|string|max:30',
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'estado' => 'required|string|max:50',
+            'prioridad' => 'required|string|max:50',
+            'fecha_apertura' => 'required|date',
+            'fecha_cierre' => 'nullable|date|after_or_equal:fecha_apertura',
+            'asignado_a' => 'nullable|integer',
+            'comentarios' => 'nullable|string',
         ]);
+
         TicketSoporte::create([
-            'servicio_empresarial_id' => $servicio->id,
-            'cliente_id'  => $request->cliente_id,
-            'titulo'      => $request->titulo,
+            'servicio_empresarial_id' => $servicioId,
+            'titulo' => $request->titulo,
             'descripcion' => $request->descripcion,
-            'estatus'     => $request->estatus,
+            'estado' => $request->estado,
+            'prioridad' => $request->prioridad,
+            'fecha_apertura' => $request->fecha_apertura,
+            'fecha_cierre' => $request->fecha_cierre,
+            'asignado_a' => $request->asignado_a,
+            'comentarios' => $request->comentarios,
         ]);
-        return redirect()->route('servicios_empresariales.tickets_soporte.index', $servicio->id)
-            ->with('success', 'Ticket creado correctamente');
+
+        return redirect()->route('tickets_soporte.index', $servicioId)
+            ->with('success', 'Ticket de soporte creado correctamente.');
     }
 
-    public function show($servicios_empresariales, $id)
+    public function edit($servicioId, $id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $ticket = TicketSoporte::with('cliente')
-            ->where('servicio_empresarial_id', $servicio->id)
-            ->findOrFail($id);
-        return view('tickets_soporte.show', compact('ticket', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicioId);
+        $ticket = TicketSoporte::findOrFail($id);
+        return view('tickets_soporte.edit', compact('ticket', 'servicio'));
     }
 
-    public function edit($servicios_empresariales, $id)
+    public function update(Request $request, $servicioId, $id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $ticket = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-        $clientes = Cliente::all();
-        return view('tickets_soporte.edit', compact('ticket', 'clientes', 'servicio'));
-    }
+        $ticket = TicketSoporte::findOrFail($id);
 
-    public function update(Request $request, $servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $ticket = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
         $request->validate([
-            'cliente_id' => 'required|exists:clientes,id',
-            'titulo'     => 'required|string|max:100',
-            'descripcion'=> 'nullable|string',
-            'estatus'    => 'required|string|max:30',
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'estado' => 'required|string|max:50',
+            'prioridad' => 'required|string|max:50',
+            'fecha_apertura' => 'required|date',
+            'fecha_cierre' => 'nullable|date|after_or_equal:fecha_apertura',
+            'asignado_a' => 'nullable|integer',
+            'comentarios' => 'nullable|string',
         ]);
-        $ticket->update([
-            'cliente_id'  => $request->cliente_id,
-            'titulo'      => $request->titulo,
-            'descripcion' => $request->descripcion,
-            'estatus'     => $request->estatus,
-        ]);
-        return redirect()->route('servicios_empresariales.tickets_soporte.index', $servicio->id)
-            ->with('success', 'Ticket actualizado');
+
+        $ticket->update($request->all());
+
+        return redirect()->route('tickets_soporte.index', $servicioId)
+            ->with('success', 'Ticket actualizado correctamente.');
     }
 
-    public function destroy($servicios_empresariales, $id)
+    public function destroy($servicioId, $id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $ticket = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
+        $ticket = TicketSoporte::findOrFail($id);
         $ticket->delete();
-        return redirect()->route('servicios_empresariales.tickets_soporte.index', $servicio->id)
-            ->with('success', 'Ticket eliminado');
+
+        return redirect()->route('tickets_soporte.index', $servicioId)
+            ->with('success', 'Ticket eliminado correctamente.');
     }
 }

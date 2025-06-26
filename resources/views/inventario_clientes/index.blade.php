@@ -2,62 +2,51 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Inventario de Equipos de Clientes</h2>
-        <a href="{{ route('inventario_clientes.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo Registro
-        </a>
-    </div>
+    <h2>Inventario de Clientes</h2>
+
+    <a href="{{ route('inventario_clientes.create') }}" class="btn btn-success mb-3">Nuevo Inventario</a>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Servicio Empresarial</th>
+                <th>Cliente</th>
+                <th>Poliza</th>
+                <th>Nombre Equipo</th>
+                <th>Descripción</th>
+                <th>Número Serie</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($inventarios as $inv)
                 <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Equipo</th>
-                    <th>Tipo</th>
-                    <th>Modelo</th>
-                    <th>Serie</th>
-                    <th>Acciones</th>
+                    <td>{{ $inv->id }}</td>
+                    <td>{{ $inv->servicio->id ?? 'N/A' }}</td>
+                    <td>{{ $inv->servicio->cliente->nombre ?? 'N/A' }}</td>
+                    <td>{{ $inv->servicio->poliza ?? 'N/A' }}</td>
+                    <td>{{ $inv->nombre_equipo }}</td>
+                    <td>{{ $inv->descripcion }}</td>
+                    <td>{{ $inv->numero_serie }}</td>
+                    <td>
+                        <a href="{{ route('inventario_clientes.edit', $inv) }}" class="btn btn-sm btn-warning">Editar</a>
+
+                        <form action="{{ route('inventario_clientes.destroy', $inv) }}" method="POST" style="display:inline-block;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar inventario?')">Eliminar</button>
+                        </form>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse($equipos as $equipo)
-                    <tr>
-                        <td>{{ $equipo->id }}</td>
-                        <td>{{ $equipo->cliente->nombre ?? '-' }}</td>
-                        <td>{{ $equipo->nombre_equipo }}</td>
-                        <td>{{ $equipo->tipo_equipo }}</td>
-                        <td>{{ $equipo->modelo }}</td>
-                        <td>{{ $equipo->serie }}</td>
-                        <td>
-                            <a href="{{ route('inventario_clientes.show', $equipo) }}" class="btn btn-sm btn-info">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a href="{{ route('inventario_clientes.edit', $equipo) }}" class="btn btn-sm btn-warning">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form action="{{ route('inventario_clientes.destroy', $equipo) }}" method="POST" style="display:inline-block;">
-                                @csrf
-                                @method('DELETE')
-                                <button onclick="return confirm('¿Seguro?')" class="btn btn-sm btn-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7">No hay equipos registrados.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @endforeach
+        </tbody>
+    </table>
+
+    {{ $inventarios->links() }}
 </div>
 @endsection

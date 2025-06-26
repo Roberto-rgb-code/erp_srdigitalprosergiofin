@@ -3,99 +3,64 @@
 namespace App\Http\Controllers;
 
 use App\Models\SeguimientoTicket;
-use App\Models\TicketSoporte;
-use App\Models\Cliente;
 use App\Models\ServicioEmpresarial;
+use App\Models\TicketSoporte;
 use Illuminate\Http\Request;
 
 class SeguimientoTicketController extends Controller
 {
-    public function index($servicios_empresariales)
+    public function index($servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $seguimientos = SeguimientoTicket::with('ticket', 'cliente')
-            ->where('servicio_empresarial_id', $servicio->id)
-            ->orderByDesc('id')->get();
-
-        return view('seguimientos_ticket.index', compact('seguimientos', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $seguimientos = SeguimientoTicket::where('servicio_empresarial_id', $servicio_empresarial_id)->get();
+        return view('seguimientos_ticket.index', compact('servicio', 'seguimientos'));
     }
 
-    public function create($servicios_empresariales)
+    public function create($servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $clientes = Cliente::all();
-        $tickets = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->get();
-        return view('seguimientos_ticket.create', compact('clientes', 'tickets', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $tickets = TicketSoporte::where('servicio_empresarial_id', $servicio_empresarial_id)->get();
+        return view('seguimientos_ticket.create', compact('servicio', 'tickets'));
     }
 
-    public function store(Request $request, $servicios_empresariales)
+    public function store(Request $request, $servicio_empresarial_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-
-        $request->validate([
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $validated = $request->validate([
             'ticket_soporte_id' => 'required|exists:tickets_soporte,id',
-            'cliente_id'        => 'required|exists:clientes,id',
-            'comentario'        => 'nullable|string',
-            'estatus'           => 'required|string|max:30',
+            'comentario' => 'required|string|max:1000',
+            'estatus' => 'required|string|max:100'
         ]);
-
-        SeguimientoTicket::create([
-            'servicio_empresarial_id' => $servicio->id,
-            'ticket_soporte_id'       => $request->ticket_soporte_id,
-            'cliente_id'              => $request->cliente_id,
-            'comentario'              => $request->comentario,
-            'estatus'                 => $request->estatus,
-        ]);
-        return redirect()->route('servicios_empresariales.seguimientos_ticket.index', $servicio->id)
-            ->with('success', 'Seguimiento creado');
+        $validated['servicio_empresarial_id'] = $servicio_empresarial_id;
+        $validated['cliente_id'] = $servicio->cliente_id;
+        SeguimientoTicket::create($validated);
+        return redirect()->route('servicios_empresariales.seguimientos_ticket.index', $servicio_empresarial_id)->with('success', 'Seguimiento agregado');
     }
 
-    public function show($servicios_empresariales, $id)
+    public function edit($servicio_empresarial_id, $seguimiento_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $seguimiento = SeguimientoTicket::with('ticket', 'cliente')
-            ->where('servicio_empresarial_id', $servicio->id)
-            ->findOrFail($id);
-        return view('seguimientos_ticket.show', compact('seguimiento', 'servicio'));
+        $servicio = ServicioEmpresarial::findOrFail($servicio_empresarial_id);
+        $seguimiento = SeguimientoTicket::findOrFail($seguimiento_id);
+        $tickets = TicketSoporte::where('servicio_empresarial_id', $servicio_empresarial_id)->get();
+        return view('seguimientos_ticket.edit', compact('servicio', 'seguimiento', 'tickets'));
     }
 
-    public function edit($servicios_empresariales, $id)
+    public function update(Request $request, $servicio_empresarial_id, $seguimiento_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $seguimiento = SeguimientoTicket::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-        $clientes = Cliente::all();
-        $tickets = TicketSoporte::where('servicio_empresarial_id', $servicio->id)->get();
-        return view('seguimientos_ticket.edit', compact('seguimiento', 'clientes', 'tickets', 'servicio'));
-    }
-
-    public function update(Request $request, $servicios_empresariales, $id)
-    {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $seguimiento = SeguimientoTicket::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
-
-        $request->validate([
+        $seguimiento = SeguimientoTicket::findOrFail($seguimiento_id);
+        $validated = $request->validate([
             'ticket_soporte_id' => 'required|exists:tickets_soporte,id',
-            'cliente_id'        => 'required|exists:clientes,id',
-            'comentario'        => 'nullable|string',
-            'estatus'           => 'required|string|max:30',
+            'comentario' => 'required|string|max:1000',
+            'estatus' => 'required|string|max:100'
         ]);
-
-        $seguimiento->update([
-            'ticket_soporte_id' => $request->ticket_soporte_id,
-            'cliente_id'        => $request->cliente_id,
-            'comentario'        => $request->comentario,
-            'estatus'           => $request->estatus,
-        ]);
-        return redirect()->route('servicios_empresariales.seguimientos_ticket.index', $servicio->id)
-            ->with('success', 'Seguimiento actualizado');
+        $seguimiento->update($validated);
+        return redirect()->route('servicios_empresariales.seguimientos_ticket.index', $servicio_empresarial_id)->with('success', 'Seguimiento actualizado');
     }
 
-    public function destroy($servicios_empresariales, $id)
+    public function destroy($servicio_empresarial_id, $seguimiento_id)
     {
-        $servicio = ServicioEmpresarial::findOrFail($servicios_empresariales);
-        $seguimiento = SeguimientoTicket::where('servicio_empresarial_id', $servicio->id)->findOrFail($id);
+        $seguimiento = SeguimientoTicket::findOrFail($seguimiento_id);
         $seguimiento->delete();
-        return redirect()->route('servicios_empresariales.seguimientos_ticket.index', $servicio->id)
-            ->with('success', 'Seguimiento eliminado');
+        return redirect()->route('servicios_empresariales.seguimientos_ticket.index', $servicio_empresarial_id)->with('success', 'Seguimiento eliminado');
     }
 }

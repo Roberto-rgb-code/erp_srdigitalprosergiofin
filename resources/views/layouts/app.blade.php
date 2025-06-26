@@ -55,66 +55,61 @@
                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                     <i class="bi bi-grid-1x2-fill me-2"></i> Dashboard
                 </a>
-                @can('ver clientes')
                 <a class="nav-link {{ request()->routeIs('clientes.*') ? 'active' : '' }}" href="{{ route('clientes.index') }}">
                     <i class="bi bi-person-lines-fill me-2"></i> Clientes
                 </a>
-                @endcan
-                @can('ver ventas')
                 <a class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}" href="{{ route('ventas.index') }}">
                     <i class="bi bi-cart-fill me-2"></i> Ventas
                 </a>
-                @endcan
-                @can('ver cableado estructurado')
                 <a class="nav-link {{ request()->routeIs('cableado.*') ? 'active' : '' }}" href="{{ route('cableado.index') }}">
                     <i class="bi bi-diagram-3-fill me-2"></i> Cableado Estructurado
                 </a>
-                @endcan
-                @can('ver desarrollo de software')
                 <a class="nav-link {{ request()->routeIs('desarrollo_software.*') ? 'active' : '' }}" href="{{ route('desarrollo_software.index') }}">
                     <i class="bi bi-code-slash me-2"></i> Desarrollo de Software
                 </a>
-                @endcan
-                @can('ver finanzas')
+                {{-- Finanzas, Recursos Humanos, Contabilidad, CxC, CxP siguen comentados --}}
+                {{--
                 <a class="nav-link {{ request()->routeIs('finanzas.*') ? 'active' : '' }}" href="{{ route('finanzas.index') }}">
                     <i class="bi bi-cash-stack me-2"></i> Finanzas
                 </a>
-                @endcan
-                @can('ver taller')
-                <a class="nav-link {{ request()->routeIs('taller.*') ? 'active' : '' }}" href="{{ route('taller.index') }}">
-                    <i class="bi bi-tools me-2"></i> Taller
-                </a>
-                @endcan
-                @can('ver control de vehiculos')
-                <a class="nav-link {{ request()->routeIs('vehiculos.*') ? 'active' : '' }}" href="{{ route('vehiculos.index') }}">
-                    <i class="bi bi-truck-front-fill me-2"></i> Control de Vehículos
-                </a>
-                @endcan
-                @can('ver recursos humanos')
                 <a class="nav-link {{ request()->routeIs('recursos_humanos.*') ? 'active' : '' }}" href="{{ route('recursos_humanos.index') }}">
                     <i class="bi bi-people-fill me-2"></i> Recursos Humanos
                 </a>
-                @endcan
-                @can('ver servicios empresariales')
-                <a class="nav-link {{ request()->routeIs('servicios_empresariales.*') ? 'active' : '' }}" href="{{ route('servicios_empresariales.index') }}">
-                    <i class="bi bi-person-badge me-2"></i> Servicios Empresariales
-                </a>
-                @endcan
-                @can('ver cuentas x cobrar')
-                <a class="nav-link {{ request()->routeIs('cuentas_por_cobrar.*') ? 'active' : '' }}" href="{{ route('cuentas_por_cobrar.index') }}">
-                    <i class="bi bi-cash-coin me-2"></i> Cuentas x Cobrar
-                </a>
-                @endcan
-                @can('ver cuentas x pagar')
-                <a class="nav-link {{ request()->routeIs('cuentas_por_pagar.*') ? 'active' : '' }}" href="{{ route('cuentas_por_pagar.index') }}">
-                    <i class="bi bi-credit-card-2-back me-2"></i> Cuentas x Pagar
-                </a>
-                @endcan
-                @can('ver contabilidad')
                 <a class="nav-link {{ request()->routeIs('contabilidad.*') ? 'active' : '' }}" href="{{ route('contabilidad.index') }}">
                     <i class="bi bi-journal-bookmark-fill me-2"></i> Contabilidad
                 </a>
-                @endcan
+                <a class="nav-link {{ request()->routeIs('cuentas_por_cobrar.*') ? 'active' : '' }}" href="{{ route('cuentas_por_cobrar.index') }}">
+                    <i class="bi bi-cash-coin me-2"></i> Cuentas x Cobrar
+                </a>
+                --}}
+                <a class="nav-link {{ request()->routeIs('cuentas_por_pagar.*') ? 'active' : '' }}" href="{{ route('cuentas_por_pagar.index') }}">
+                    <i class="bi bi-credit-card-2-back me-2"></i> Cuentas x Pagar
+                </a>
+                <a class="nav-link {{ request()->routeIs('taller.*') ? 'active' : '' }}" href="{{ route('taller.index') }}">
+                    <i class="bi bi-tools me-2"></i> Taller
+                </a>
+                <a class="nav-link {{ request()->routeIs('vehiculos.*') ? 'active' : '' }}" href="{{ route('vehiculos.index') }}">
+                    <i class="bi bi-truck-front-fill me-2"></i> Control de Vehículos
+                </a>
+                <a class="nav-link {{ request()->routeIs('servicios_empresariales.*') ? 'active' : '' }}" href="{{ route('servicios_empresariales.index') }}">
+                    <i class="bi bi-person-badge me-2"></i> Servicios Empresariales
+                </a>
+                <a class="nav-link {{ request()->routeIs('creditos.*') ? 'active' : '' }}" href="{{ route('creditos.index') }}">
+                    <i class="bi bi-wallet2 me-2"></i> Créditos
+                </a>
+                <a class="nav-link {{ request()->routeIs('compras.*') ? 'active' : '' }}" href="{{ route('compras.index') }}">
+                    <i class="bi bi-basket3-fill me-2"></i> Compras
+                </a>
+                <a class="nav-link {{ request()->routeIs('punto_venta.*') ? 'active' : '' }}" href="{{ route('punto_venta.index') }}">
+                    <i class="bi bi-receipt-cutoff me-2"></i> Punto de Venta
+                </a>
+                {{-- Nuevos módulos agregados pero comentados --}}
+                {{--
+                <a class="nav-link {{ request()->routeIs('personal.*') ? 'active' : '' }}" href="{{ route('personal.index') }}">
+                    <i class="bi bi-person-badge-fill me-2"></i> Personal
+                </a>
+                
+                --}}
             </nav>
         </div>
         <!-- Main Content -->

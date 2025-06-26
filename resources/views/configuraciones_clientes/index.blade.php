@@ -1,39 +1,26 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container">
-    <h2>Configuraciones Técnicas del Servicio: <b>{{ $servicio->poliza ?? $servicio->id }}</b></h2>
-    <a href="{{ route('servicios_empresariales.configuraciones_clientes.create', $servicio->id) }}" class="btn btn-primary mb-2">Nueva configuración</a>
-
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    <table class="table table-bordered">
+    <h2>Configuraciones del Cliente (Servicio #{{ $servicio->id }})</h2>
+    <a href="{{ route('servicios_empresariales.configuraciones_clientes.create', $servicio->id) }}" class="btn btn-primary mb-3">Agregar Configuración</a>
+    @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
+    <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Cliente</th>
-                <th>Tipo</th>
-                <th>Descripción</th>
-                <th>Dato</th>
-                <th>Acciones</th>
+                <th>Tipo</th><th>Descripción</th><th>Dato</th><th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-        @foreach($configuraciones as $c)
+        @foreach($configuraciones as $conf)
             <tr>
-                <td>{{ $c->id }}</td>
-                <td>{{ $c->cliente->nombre ?? '' }}</td>
-                <td>{{ $c->tipo }}</td>
-                <td>{{ $c->descripcion }}</td>
-                <td>{{ $c->dato }}</td>
+                <td>{{ $conf->tipo }}</td>
+                <td>{{ $conf->descripcion }}</td>
+                <td>{{ $conf->dato }}</td>
                 <td>
-                    <a href="{{ route('servicios_empresariales.configuraciones_clientes.show', [$servicio->id, $c->id]) }}" class="btn btn-info btn-sm">Ver</a>
-                    <a href="{{ route('servicios_empresariales.configuraciones_clientes.edit', [$servicio->id, $c->id]) }}" class="btn btn-warning btn-sm">Editar</a>
-                    <form action="{{ route('servicios_empresariales.configuraciones_clientes.destroy', [$servicio->id, $c->id]) }}" method="POST" style="display:inline;">
+                    <a href="{{ route('servicios_empresariales.configuraciones_clientes.edit', [$servicio->id, $conf->id]) }}" class="btn btn-sm btn-warning">Editar</a>
+                    <form action="{{ route('servicios_empresariales.configuraciones_clientes.destroy', [$servicio->id, $conf->id]) }}" method="POST" style="display:inline;">
                         @csrf @method('DELETE')
-                        <button onclick="return confirm('¿Seguro?')" class="btn btn-danger btn-sm">Eliminar</button>
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar configuración?')">Eliminar</button>
                     </form>
                 </td>
             </tr>
