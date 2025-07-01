@@ -1,13 +1,17 @@
 @extends('layouts.app')
 @section('content')
 <div class="container py-4">
+    {{-- Encabezado y acción principal --}}
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
-        <h2 class="mb-0">Ventas</h2>
-        <a href="{{ route('ventas.create') }}" class="btn btn-primary btn-lg">
+        <h2 class="mb-0 fw-bold">
+            <i class="bi bi-cash-stack me-2"></i> Ventas
+        </h2>
+        <a href="{{ route('ventas.create') }}" class="btn btn-primary btn-lg shadow-sm rounded-pill">
             <i class="bi bi-plus-lg"></i> Nueva Venta
         </a>
     </div>
 
+    {{-- Mensajes flash --}}
     @if(session('success'))
         <div class="alert alert-success mb-3">{{ session('success') }}</div>
     @endif
@@ -18,8 +22,8 @@
     {{-- Resúmenes --}}
     <div class="row mb-4 g-3">
         <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body text-center">
+            <div class="card shadow-sm border-0 h-100 text-center">
+                <div class="card-body">
                     <div class="fs-1 fw-bold text-primary mb-1">
                         ${{ number_format($ventas->sum('monto_total'), 2) }}
                     </div>
@@ -28,8 +32,8 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body text-center">
+            <div class="card shadow-sm border-0 h-100 text-center">
+                <div class="card-body">
                     <div class="fs-1 fw-bold text-success mb-1">
                         {{ $ventas->total() }}
                     </div>
@@ -38,8 +42,8 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body text-center">
+            <div class="card shadow-sm border-0 h-100 text-center">
+                <div class="card-body">
                     <div class="fs-1 fw-bold text-info mb-1">
                         {{ $clientes->count() }}
                     </div>
@@ -80,8 +84,8 @@
         <div class="col-md-4 d-flex gap-2">
             <button class="btn btn-secondary flex-grow-1"><i class="bi bi-search"></i> Buscar</button>
             <a href="{{ route('ventas.index') }}" class="btn btn-outline-secondary">Limpiar</a>
-            <a href="{{ route('ventas.export.excel', request()->all()) }}" class="btn btn-success">Excel</a>
-            <a href="{{ route('ventas.export.pdf', request()->all()) }}" class="btn btn-danger">PDF</a>
+            <a href="{{ route('ventas.export.excel', request()->all()) }}" class="btn btn-success"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            <a href="{{ route('ventas.export.pdf', request()->all()) }}" class="btn btn-danger"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         </div>
     </form>
 
@@ -106,8 +110,8 @@
     </div>
 
     {{-- Tabla de Ventas --}}
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle shadow-sm">
+    <div class="table-responsive shadow-sm rounded mb-5">
+        <table class="table table-bordered table-striped align-middle">
             <thead class="table-primary">
                 <tr class="align-middle text-center">
                     <th>Folio</th>
@@ -126,7 +130,7 @@
                         <td class="text-center">{{ $v->folio ?? '-' }}</td>
                         <td class="text-center">{{ $v->id }}</td>
                         <td>{{ $v->cliente->nombre_completo ?? '-' }}</td>
-                        <td>{{ $v->fecha_venta }}</td>
+                        <td class="text-center">{{ $v->fecha_venta }}</td>
                         <td class="fw-bold text-end">${{ number_format($v->monto_total,2) }}</td>
                         <td class="text-center">
                             @if($v->estatus === 'Pagado')
@@ -172,7 +176,7 @@
 
     {{-- Top Clientes --}}
     <div class="my-5">
-        <div class="card">
+        <div class="card shadow-sm border-0">
             <div class="card-header bg-white fw-bold">Top 5 Clientes por monto vendido</div>
             <div class="card-body p-0">
                 <table class="table table-sm mb-0 align-middle">
@@ -232,11 +236,18 @@
             datasets: [{
                 label: 'Ventas por Estatus',
                 data: {!! json_encode(array_values($ventasPorEstatus)) !!},
+                backgroundColor: [
+                    '#198754', // verde
+                    '#ffc107', // amarillo
+                    '#dc3545', // rojo
+                    '#0dcaf0', // azul
+                ],
                 borderRadius: 8
             }]
         },
         options: {
-            responsive: true
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
         }
     });
 @endif

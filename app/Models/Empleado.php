@@ -1,6 +1,5 @@
 <?php
 
-// app/Models/Empleado.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -10,20 +9,49 @@ class Empleado extends Model
     protected $table = 'empleados';
 
     protected $fillable = [
-        'nombre', 'apellido', 'rfc', 'curp', 'fecha_ingreso', 'status', 'salario', 'puesto_id', 'notas'
+        'numero_empleado',
+        'nombre',
+        'apellido',
+        'rfc',
+        'curp',
+        'fecha_ingreso',
+        'status',
+        'salario',
+        'puesto_empleado_id', // <--- RELACIÓN
+        'notas',
+        'sucursal',
+        'telefono',
+        'correo',
+        'tipo_contrato',
+        'nss',
+        'salario_diario_fiscal',
+        'salario_diario_no_fiscal',
+        'salario_mensual_fiscal',
+        'salario_mensual_no_fiscal',
+        'sexo',
+        'edad',
+        'tipo_sangre',
+        'fecha_nacimiento',
+        'estado_civil',
+        'domicilio',
+        'contacto_emergencia',
+        'parentesco',
+        'telefono_beneficiario',
+        'cuenta_fiscal',
+        'cuenta_no_fiscal',
+        'banco_fiscal',
+        'clabe_fiscal',
+        'banco_no_fiscal',
+        'clabe_no_fiscal',
+        'tipo_empleado',
+        'horario',
+        'dias_laborales',
+        'justificantes_incapacidad'
     ];
 
-    // Relación con PuestoEmpleado
+    // RELACIÓN: Un empleado pertenece a un puesto
     public function puesto()
     {
-        return $this->belongsTo(PuestoEmpleado::class, 'puesto_id');
+        return $this->belongsTo(PuestoEmpleado::class, 'puesto_empleado_id');
     }
-
-    // Submódulos
-    public function asistencias()    { return $this->hasMany(Asistencia::class); }
-    public function documentos()     { return $this->hasMany(DocumentoEmpleado::class); }
-    public function nominas()        { return $this->hasMany(Nomina::class); }
-    public function permisos()       { return $this->hasMany(PermisoEmpleado::class); }
-
-    public $timestamps = false;
 }

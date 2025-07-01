@@ -17,7 +17,7 @@ class ClientesExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        $query = Cliente::with('datoFiscal'); // Para traer el RFC de la relación
+        $query = Cliente::with('datoFiscal');
 
         if (!empty($this->filters['nombre'])) {
             $query->where('nombre_completo', 'ILIKE', "%{$this->filters['nombre']}%");
@@ -31,30 +31,25 @@ class ClientesExport implements FromCollection, WithHeadings
             $query->where('status', $this->filters['status']);
         }
 
-        // Trae todos los campos que sí existen
         $clientes = $query->orderBy('id', 'desc')->get([
             'id',
             'nombre_completo',
             'direccion',
             'contacto',
             'tipo_cliente',
-            'limite_credito',
-            'saldo',
-            'status'
+            // 'limite_credito',
+            // 'saldo',
+            // 'status'
         ]);
 
-        // Usamos map para incluir el RFC de la relación
         return $clientes->map(function ($c) {
             return [
-                'id'             => $c->id,
-                'nombre'         => $c->nombre_completo,
-                'rfc'            => optional($c->datoFiscal)->rfc,  // Evita error si no tiene datoFiscal
-                'direccion'      => $c->direccion,
-                'contacto'       => $c->contacto,
-                'tipo_cliente'   => $c->tipo_cliente,
-                'limite_credito' => $c->limite_credito,
-                'saldo'          => $c->saldo,
-                'status'         => $c->status,
+                'ID'        => $c->id,
+                'Nombre'    => $c->nombre_completo,
+                'RFC'       => optional($c->datoFiscal)->rfc,
+                'Dirección' => $c->direccion,
+                'Contacto'  => $c->contacto,
+                'Tipo'      => $c->tipo_cliente,
             ];
         });
     }
@@ -68,9 +63,6 @@ class ClientesExport implements FromCollection, WithHeadings
             'Dirección',
             'Contacto',
             'Tipo',
-            'Límite Crédito',
-            'Saldo',
-            'Estatus'
         ];
     }
 }

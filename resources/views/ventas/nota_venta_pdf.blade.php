@@ -9,11 +9,13 @@
         .title { font-size: 1.6em; font-weight: bold; text-align: center; margin-bottom: 10px; }
         .datos { margin-bottom: 18px; }
         .datos th { text-align: left; padding-right: 8px; }
-        .tabla-productos { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .tabla-productos th, .tabla-productos td { border: 1px solid #aaa; padding: 6px; text-align: left; }
-        .tabla-productos th { background: #e7f1ff; }
         .totales { text-align: right; font-size: 1.1em; margin-top: 10px; }
         .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 8px; }
+        .alert-fiscal { background: #e7f1ff; padding: 10px; border-radius: 6px; margin-bottom: 15px;}
+        .productos-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+        .productos-table th, .productos-table td { border: 1px solid #bbb; padding: 5px 7px; text-align: left; }
+        .productos-table th { background: #f0f7ff; }
+        .text-end { text-align: right; }
     </style>
 </head>
 <body>
@@ -45,64 +47,76 @@
     <table class="datos">
         <tr>
             <th>Nombre:</th>
-            <td>{{ $venta->cliente->nombre ?? '-' }}</td>
+            <td>{{ $venta->cliente->nombre_completo ?? '-' }}</td>
             <th>Contacto:</th>
             <td>{{ $venta->cliente->contacto ?? '-' }}</td>
         </tr>
         <tr>
-            <th>RFC:</th>
-            <td>{{ $venta->cliente->rfc ?? '-' }}</td>
             <th>Dirección:</th>
             <td>{{ $venta->cliente->direccion ?? '-' }}</td>
+            <th>Tipo de Cliente:</th>
+            <td>{{ $venta->cliente->tipo_cliente ?? '-' }}</td>
         </tr>
-        @if(isset($venta->cliente->datoFiscal))
-            <tr>
-                <th>Razón Social:</th>
-                <td>{{ $venta->cliente->datoFiscal->razon_social ?? '-' }}</td>
-                <th>RFC Fiscal:</th>
-                <td>{{ $venta->cliente->datoFiscal->rfc ?? '-' }}</td>
-            </tr>
-            <tr>
-                <th>CP:</th>
-                <td>{{ $venta->cliente->datoFiscal->codigo_postal ?? '-' }}</td>
-                <th>Uso CFDI:</th>
-                <td>{{ $venta->cliente->datoFiscal->uso_cfdi ?? '-' }}</td>
-            </tr>
-        @endif
     </table>
 
-    <div class="section-title">Productos / Servicios</div>
-    <table class="tabla-productos">
+    @php $fiscal = $venta->cliente->datoFiscal ?? null; @endphp
+    @if($fiscal)
+    <div class="alert-fiscal">
+        <b>Datos Fiscales:</b><br>
+        <strong>Nombre fiscal:</strong> {{ $fiscal->nombre_fiscal ?? '-' }}<br>
+        <strong>RFC:</strong> {{ $fiscal->rfc ?? '-' }}<br>
+        <strong>Dirección fiscal:</strong> {{ $fiscal->direccion_fiscal ?? '-' }}<br>
+        <strong>Correo:</strong> {{ $fiscal->correo ?? '-' }}<br>
+        <strong>Uso CFDI:</strong> {{ $fiscal->uso_cfdi ?? '-' }}<br>
+        <strong>Régimen fiscal:</strong> {{ $fiscal->regimen_fiscal ?? '-' }}<br>
+    </div>
+    @endif
+
+    <div class="section-title">Detalle de productos vendidos</div>
+    <table class="productos-table">
         <thead>
             <tr>
-                <th>SKU</th>
-                <th>No. Serie</th>
                 <th>Producto</th>
-                <th>Precio Costo</th>
-                <th>Precio Venta</th>
-                <th>Cantidad</th>
-                <th>Subtotal</th>
+                <th>SKU</th>
+                <th class="text-end">Precio unitario</th>
+                <th class="text-end">Cantidad</th>
+                <th class="text-end">Subtotal</th>
             </tr>
         </thead>
         <tbody>
-        @foreach($venta->detalles as $detalle)
+        @php $granTotal = 0; @endphp
+        @forelse($venta->productos as $p)
+            @php
+                $cantidad = $p->pivot->cantidad ?? 0;
+                $precio = $p->pivot->precio_unitario ?? $p->precio_venta;
+                $subtotal = $cantidad * $precio;
+                $granTotal += $subtotal;
+            @endphp
             <tr>
-                <td>{{ $detalle->sku ?? '-' }}</td>
-                <td>{{ $detalle->no_serie ?? '-' }}</td>
-                <td>{{ $detalle->nombre_producto ?? '-' }}</td>
-                <td>${{ number_format($detalle->precio_costo,2) }}</td>
-                <td>${{ number_format($detalle->precio_venta,2) }}</td>
-                <td>{{ $detalle->cantidad }}</td>
-                <td>${{ number_format($detalle->subtotal,2) }}</td>
+                <td>{{ $p->producto }}</td>
+                <td>{{ $p->sku }}</td>
+                <td class="text-end">${{ number_format($precio, 2) }}</td>
+                <td class="text-end">{{ $cantidad }}</td>
+                <td class="text-end">${{ number_format($subtotal,2) }}</td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="5" class="text-center">Sin productos asociados</td>
+            </tr>
+        @endforelse
         </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="4" class="text-end">Total</th>
+                <th class="text-end">${{ number_format($granTotal, 2) }}</th>
+            </tr>
+        </tfoot>
     </table>
 
     <div class="totales">
-        <b>Total: ${{ number_format($venta->monto_total,2) }}</b>
+        <b>Total a pagar: ${{ number_format($granTotal,2) }}</b>
     </div>
 
-    <div class="section-title">¡Gracias por su compra!</div>
+    <div class="section-title" style="text-align:center;margin-top:22px;">¡Gracias por su compra!</div>
 </body>
 </html>

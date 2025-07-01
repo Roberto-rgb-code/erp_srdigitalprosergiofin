@@ -4,25 +4,33 @@
         'Efectivo','Transferencia','Tarjeta de crédito',
         'Tarjeta de débito','Línea de crédito','Mixto'
     ];
-    $clientes = $clientes ?? \App\Models\Cliente::with('datoFiscal')->get();
-    $venta = $venta ?? null;
+    $productosSeleccionados = [];
+    if(isset($venta) && $venta->productos) {
+        foreach($venta->productos as $p) {
+            $productosSeleccionados[$p->id] = [
+                'cantidad' => $p->pivot->cantidad,
+                'precio_unitario' => $p->pivot->precio_unitario
+            ];
+        }
+    }
 @endphp
 
+{{-- Selección de Cliente --}}
 <div class="mb-3">
     <label>Cliente *</label>
     <select name="cliente_id" class="form-select" required>
         <option value="">Seleccione...</option>
         @foreach($clientes as $c)
-            <option value="{{ $c->id }}" @selected(old('cliente_id', $venta->cliente_id ?? '') == $c->id)>
+            <option value="{{ $c->id }}"
+                @selected(old('cliente_id', $venta->cliente_id ?? '') == $c->id)>
                 {{ $c->nombre_completo }}
             </option>
         @endforeach
     </select>
 </div>
 
-{{-- Mostrar datos fiscales del cliente seleccionado (dinámico con JS) --}}
+{{-- Dinámico: datos fiscales --}}
 <div class="mb-3" id="datos-fiscales-box">
-    {{-- Aquí se rellena con JS si el cliente cambia --}}
     @if(isset($venta) && $venta->cliente && $venta->cliente->datoFiscal)
         <div class="alert alert-info">
             <strong>RFC:</strong> {{ $venta->cliente->datoFiscal->rfc }}<br>
@@ -32,69 +40,74 @@
     @endif
 </div>
 
+{{-- Fecha --}}
 <div class="mb-3">
     <label>Fecha de Venta *</label>
     <input type="date" name="fecha_venta" value="{{ old('fecha_venta', $venta->fecha_venta ?? '') }}" class="form-control" required>
 </div>
 
-{{-- SECCIÓN DE PRODUCTOS --}}
-<div class="mb-3">
-    <label>Productos</label>
-    <table class="table table-bordered" id="productos-table">
-        <thead>
+{{-- Selector dinámico de productos --}}
+<h5 class="mt-4 mb-2">Agregar productos a la venta</h5>
+<div class="card p-3 mb-3 shadow-sm border-0">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label mb-1">Producto</label>
+            <select id="select-producto" class="form-select">
+                <option value="">Seleccione producto...</option>
+                @foreach($productos as $prod)
+                    <option value="{{ $prod->id }}"
+                        data-precio="{{ $prod->precio_venta }}"
+                        data-stock="{{ $prod->cantidad }}"
+                        data-nombre="{{ $prod->producto }}"
+                        data-sku="{{ $prod->sku }}"
+                    >{{ $prod->producto }} ({{ $prod->sku }}) - Stock: {{ $prod->cantidad }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Precio</label>
+            <input type="number" min="0" step="0.01" id="input-precio" class="form-control" disabled>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Cantidad</label>
+            <input type="number" min="1" id="input-cantidad" class="form-control" disabled>
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="button" id="btn-agregar-producto" class="btn btn-success" disabled>
+                <i class="bi bi-cart-plus"></i> Agregar producto
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Tabla y campos ocultos --}}
+<div class="table-responsive mb-3">
+    <table class="table table-bordered align-middle" id="tabla-productos-venta">
+        <thead class="table-light">
             <tr>
+                <th>Producto</th>
                 <th>SKU</th>
-                <th>No. Serie</th>
-                <th>Producto (libre)</th>
-                <th>Precio Costo</th>
-                <th>Precio Venta</th>
+                <th>Precio</th>
                 <th>Cantidad</th>
-                <th>Subtotal</th>
-                <th></th>
+                <th>Total</th>
+                <th>Quitar</th>
             </tr>
         </thead>
         <tbody>
-            @php
-                $productosViejos = old('productos', isset($venta) ? $venta->detalles->toArray() : []);
-            @endphp
-            @foreach($productosViejos as $i => $detalle)
-                <tr>
-                    <td>
-                        <input type="text" name="productos[{{ $i }}][sku]" class="form-control" value="{{ $detalle['sku'] ?? '' }}">
-                    </td>
-                    <td>
-                        <input type="text" name="productos[{{ $i }}][no_serie]" class="form-control" value="{{ $detalle['no_serie'] ?? '' }}">
-                    </td>
-                    <td>
-                        <input type="text" name="productos[{{ $i }}][nombre_producto]" class="form-control" required value="{{ $detalle['nombre_producto'] ?? $detalle['producto']['nombre'] ?? '' }}">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="productos[{{ $i }}][precio_costo]" class="form-control" value="{{ $detalle['precio_costo'] ?? 0 }}">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="productos[{{ $i }}][precio_venta]" class="form-control" required value="{{ $detalle['precio_venta'] ?? $detalle['precio_unitario'] ?? $detalle['precio'] ?? 0 }}">
-                    </td>
-                    <td>
-                        <input type="number" name="productos[{{ $i }}][cantidad]" class="form-control" min="1" required value="{{ $detalle['cantidad'] ?? 1 }}">
-                    </td>
-                    <td class="subtotal">
-                        {{ number_format(($detalle['cantidad'] ?? 1) * ($detalle['precio_venta'] ?? $detalle['precio_unitario'] ?? 0), 2) }}
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm remove-product">Eliminar</button>
-                    </td>
-                </tr>
-            @endforeach
+            {{-- JS agregará filas dinámicamente --}}
         </tbody>
     </table>
-    <button type="button" id="add-product" class="btn btn-primary btn-sm">Agregar producto</button>
 </div>
+<div id="productos-campos"></div>
 
+{{-- Monto Total --}}
 <div class="mb-3">
     <label>Monto Total *</label>
-    <input type="number" step="0.01" name="monto_total" value="{{ old('monto_total', $venta->monto_total ?? '') }}" class="form-control" required>
+    <input type="number" step="0.01" name="monto_total" value="{{ old('monto_total', $venta->monto_total ?? '') }}" class="form-control" required id="input-monto-total">
+    <small class="text-secondary">Se calcula automáticamente según los productos seleccionados.</small>
 </div>
 
+{{-- Métodos de pago y status --}}
 <div class="mb-3">
     <label>Método de Pago</label>
     <select name="tipo_venta" class="form-select">
@@ -123,49 +136,77 @@
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let i = $('#productos-table tbody tr').length || 0;
+let productosVenta = {!! json_encode($productosSeleccionados) !!}; // {id: {cantidad, precio_unitario}}
+const productosDatos = @json($productosJson);
 
-    $('#add-product').click(function() {
-        let tr = `<tr>
-            <td><input type="text" name="productos[${i}][sku]" class="form-control"></td>
-            <td><input type="text" name="productos[${i}][no_serie]" class="form-control"></td>
-            <td><input type="text" name="productos[${i}][nombre_producto]" class="form-control" required></td>
-            <td><input type="number" step="0.01" name="productos[${i}][precio_costo]" class="form-control" value="0"></td>
-            <td><input type="number" step="0.01" name="productos[${i}][precio_venta]" class="form-control" value="0" required></td>
-            <td><input type="number" name="productos[${i}][cantidad]" class="form-control" min="1" value="1" required></td>
-            <td class="subtotal">0.00</td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-product">Eliminar</button></td>
-        </tr>`;
-        $('#productos-table tbody').append(tr);
-        i++;
+function actualizarTablaProductos() {
+    const $tbody = $('#tabla-productos-venta tbody');
+    $tbody.html('');
+    let montoTotal = 0;
+    $('#productos-campos').html('');
+    Object.entries(productosVenta).forEach(([pid, obj]) => {
+        if(obj.cantidad > 0){
+            const data = productosDatos[pid];
+            const total = obj.precio_unitario * obj.cantidad;
+            montoTotal += total;
+            $tbody.append(`
+                <tr>
+                    <td>${data.nombre}</td>
+                    <td>${data.sku}</td>
+                    <td>$${parseFloat(obj.precio_unitario).toFixed(2)}</td>
+                    <td>${obj.cantidad}</td>
+                    <td>$${total.toFixed(2)}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="eliminarProductoVenta(${pid})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+            $('#productos-campos').append(`
+                <input type="hidden" name="productos[${pid}][cantidad]" value="${obj.cantidad}">
+                <input type="hidden" name="productos[${pid}][precio_unitario]" value="${obj.precio_unitario}">
+            `);
+        }
     });
+    $('#input-monto-total').val(montoTotal.toFixed(2));
+}
+function eliminarProductoVenta(id) {
+    delete productosVenta[id];
+    actualizarTablaProductos();
+}
 
-    $('#productos-table').on('click', '.remove-product', function() {
-        $(this).closest('tr').remove();
-        actualizarTotal();
-    });
-
-    $('#productos-table').on('input change', 'input', function() {
-        let tr = $(this).closest('tr');
-        let cantidad = parseFloat(tr.find('input[name$="[cantidad]"]').val()) || 0;
-        let precio = parseFloat(tr.find('input[name$="[precio_venta]"]').val()) || 0;
-        let subtotal = cantidad * precio;
-        tr.find('.subtotal').text(subtotal.toFixed(2));
-        actualizarTotal();
-    });
-
-    function actualizarTotal() {
-        let total = 0;
-        $('#productos-table tbody tr').each(function() {
-            let cantidad = parseFloat($(this).find('input[name$="[cantidad]"]').val()) || 0;
-            let precio = parseFloat($(this).find('input[name$="[precio_venta]"]').val()) || 0;
-            total += cantidad * precio;
-        });
-        $('input[name="monto_total"]').val(total.toFixed(2));
+$('#select-producto').change(function() {
+    const pid = $(this).val();
+    if(pid && productosDatos[pid]) {
+        $('#input-precio').val(productosDatos[pid].precio).prop('disabled', false);
+        $('#input-cantidad').val(1).prop('disabled', false).attr('max', productosDatos[pid].stock);
+        $('#btn-agregar-producto').prop('disabled', false);
+    } else {
+        $('#input-precio').val('').prop('disabled', true);
+        $('#input-cantidad').val('').prop('disabled', true);
+        $('#btn-agregar-producto').prop('disabled', true);
     }
-
-    // Dinámico: mostrar datos fiscales del cliente seleccionado
+});
+$('#btn-agregar-producto').click(function() {
+    const pid = $('#select-producto').val();
+    if(!pid) return;
+    const cantidad = parseInt($('#input-cantidad').val());
+    const precio = parseFloat($('#input-precio').val());
+    if(cantidad > productosDatos[pid].stock) {
+        alert('No hay suficiente stock.');
+        return;
+    }
+    productosVenta[pid] = {cantidad, precio_unitario: precio};
+    actualizarTablaProductos();
+    $('#select-producto').val('');
+    $('#input-precio').val('').prop('disabled', true);
+    $('#input-cantidad').val('').prop('disabled', true);
+    $('#btn-agregar-producto').prop('disabled', true);
+});
+$(document).ready(function(){
+    actualizarTablaProductos();
+    // Datos fiscales dinámicos
     $('select[name="cliente_id"]').change(function() {
         let clienteId = $(this).val();
         $('#datos-fiscales-box').html('');
@@ -183,9 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-
-    // Inicializa totales al cargar
-    actualizarTotal();
 });
 </script>
 @endpush

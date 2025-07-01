@@ -61,14 +61,17 @@
                 <a class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}" href="{{ route('ventas.index') }}">
                     <i class="bi bi-cart-fill me-2"></i> Ventas
                 </a>
+                {{-- ---- INVENTARIO NUEVO MODULO ---- --}}
+                <a class="nav-link {{ request()->routeIs('inventario.*') ? 'active' : '' }}" href="{{ route('inventario.index') }}">
+                    <i class="bi bi-box-seam me-2"></i> Inventario
+                </a>
+                {{-- ------------------------------------ --}}
                 <a class="nav-link {{ request()->routeIs('cableado.*') ? 'active' : '' }}" href="{{ route('cableado.index') }}">
                     <i class="bi bi-diagram-3-fill me-2"></i> Cableado Estructurado
                 </a>
                 <a class="nav-link {{ request()->routeIs('desarrollo_software.*') ? 'active' : '' }}" href="{{ route('desarrollo_software.index') }}">
                     <i class="bi bi-code-slash me-2"></i> Desarrollo de Software
                 </a>
-                {{-- Finanzas, Recursos Humanos, Contabilidad, CxC, CxP siguen comentados --}}
-                {{--
                 <a class="nav-link {{ request()->routeIs('finanzas.*') ? 'active' : '' }}" href="{{ route('finanzas.index') }}">
                     <i class="bi bi-cash-stack me-2"></i> Finanzas
                 </a>
@@ -81,7 +84,6 @@
                 <a class="nav-link {{ request()->routeIs('cuentas_por_cobrar.*') ? 'active' : '' }}" href="{{ route('cuentas_por_cobrar.index') }}">
                     <i class="bi bi-cash-coin me-2"></i> Cuentas x Cobrar
                 </a>
-                --}}
                 <a class="nav-link {{ request()->routeIs('cuentas_por_pagar.*') ? 'active' : '' }}" href="{{ route('cuentas_por_pagar.index') }}">
                     <i class="bi bi-credit-card-2-back me-2"></i> Cuentas x Pagar
                 </a>
@@ -103,13 +105,9 @@
                 <a class="nav-link {{ request()->routeIs('punto_venta.*') ? 'active' : '' }}" href="{{ route('punto_venta.index') }}">
                     <i class="bi bi-receipt-cutoff me-2"></i> Punto de Venta
                 </a>
-                {{-- Nuevos módulos agregados pero comentados --}}
-                {{--
                 <a class="nav-link {{ request()->routeIs('personal.*') ? 'active' : '' }}" href="{{ route('personal.index') }}">
                     <i class="bi bi-person-badge-fill me-2"></i> Personal
                 </a>
-                
-                --}}
             </nav>
         </div>
         <!-- Main Content -->

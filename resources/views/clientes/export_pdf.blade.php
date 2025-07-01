@@ -18,7 +18,6 @@
                 <th>Dirección</th>
                 <th>Contacto</th>
                 <th>Tipo</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -29,7 +28,6 @@
                 <td>{{ $cliente->direccion }}</td>
                 <td>{{ $cliente->contacto }}</td>
                 <td>{{ $cliente->tipo_cliente }}</td>
-                <td>{{ $cliente->status }}</td>
             </tr>
             @endforeach
         </tbody>

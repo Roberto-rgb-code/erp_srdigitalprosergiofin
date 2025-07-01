@@ -24,34 +24,40 @@
                 <div class="card-body d-flex flex-column align-items-center">
                     <div class="fs-3"><i class="bi bi-people-fill"></i></div>
                     <div class="fw-bold fs-5">{{ $clientes->total() }}</div>
-                    <small class="text-uppercase text-secondary">Clientes mostrados</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-bg-success-subtle border-0 shadow-sm h-100">
-                <div class="card-body d-flex flex-column align-items-center">
-                    <div class="fs-3"><i class="bi bi-cash-coin"></i></div>
-                    <div class="fw-bold fs-5">-</div>
-                    <small class="text-uppercase text-secondary">Crédito total</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-bg-warning-subtle border-0 shadow-sm h-100">
-                <div class="card-body d-flex flex-column align-items-center">
-                    <div class="fs-3"><i class="bi bi-coin"></i></div>
-                    <div class="fw-bold fs-5">-</div>
-                    <small class="text-uppercase text-secondary">Saldo total</small>
+                    <small class="text-uppercase text-secondary">Clientes registrados</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card text-bg-info-subtle border-0 shadow-sm h-100">
                 <div class="card-body d-flex flex-column align-items-center">
-                    <div class="fs-3"><i class="bi bi-pie-chart-fill"></i></div>
-                    <div class="fw-bold fs-5">{{ $conteoStatus->get('Activo', 0) ?? 0 }}</div>
-                    <small class="text-uppercase text-secondary">Clientes activos</small>
+                    <div class="fs-3"><i class="bi bi-building"></i></div>
+                    <div class="fw-bold fs-5">
+                        {{ $clientes->where('empresa', '!=', '')->unique('empresa')->count() }}
+                    </div>
+                    <small class="text-uppercase text-secondary">Empresas distintas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-success-subtle border-0 shadow-sm h-100">
+                <div class="card-body d-flex flex-column align-items-center">
+                    <div class="fs-3"><i class="bi bi-123"></i></div>
+                    <div class="fw-bold fs-5">
+                        {{ $clientes->where('datoFiscal.rfc', '!=', null)->count() }}
+                    </div>
+                    <small class="text-uppercase text-secondary">Clientes con RFC</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-warning-subtle border-0 shadow-sm h-100">
+                <div class="card-body d-flex flex-column align-items-center">
+                    <div class="fs-3"><i class="bi bi-phone"></i></div>
+                    <div class="fw-bold fs-5">
+                        {{ $clientes->where('contacto', '!=', '')->unique('contacto')->count() }}
+                    </div>
+                    <small class="text-uppercase text-secondary">Contactos únicos</small>
                 </div>
             </div>
         </div>
@@ -62,16 +68,16 @@
         <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold text-secondary mb-2">Clientes por estatus</h6>
-                    <canvas id="graficoStatus" height="170"></canvas>
+                    <h6 class="fw-semibold text-secondary mb-2">Clientes por tipo</h6>
+                    <canvas id="graficoTipo" height="170"></canvas>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h6 class="fw-semibold text-secondary mb-2">Clientes por tipo</h6>
-                    <canvas id="graficoTipo" height="170"></canvas>
+                    <h6 class="fw-semibold text-secondary mb-2">Clientes con RFC</h6>
+                    <canvas id="graficoRfc" height="170"></canvas>
                 </div>
             </div>
         </div>
@@ -84,13 +90,6 @@
         </div>
         <div class="col-md-2">
             <input type="text" name="rfc" class="form-control" placeholder="RFC" value="{{ request('rfc') }}">
-        </div>
-        <div class="col-md-2">
-            <select name="status" class="form-select">
-                <option value="">Estatus</option>
-                <option value="Activo" @selected(request('status')=='Activo')>Activo</option>
-                <option value="Inactivo" @selected(request('status')=='Inactivo')>Inactivo</option>
-            </select>
         </div>
         <div class="col-auto d-flex align-items-end gap-2">
             <button class="btn btn-outline-secondary">Buscar</button>
@@ -116,7 +115,8 @@
                     <th>RFC</th>
                     <th>Contacto</th>
                     <th>Tipo</th>
-                    <th>Estatus</th>
+                    <th>Dirección</th>
+                    <th>Correo Fiscal</th>
                     <th style="width:150px">Acciones</th>
                 </tr>
             </thead>
@@ -133,11 +133,8 @@
                         <td>{{ $c->datoFiscal->rfc ?? '-' }}</td>
                         <td>{{ $c->contacto }}</td>
                         <td>{{ $c->tipo_cliente }}</td>
-                        <td>
-                            <span class="badge bg-{{ $c->status == 'Activo' ? 'success' : 'secondary' }}">
-                                {{ $c->status }}
-                            </span>
-                        </td>
+                        <td>{{ $c->direccion }}</td>
+                        <td>{{ $c->datoFiscal->correo ?? '-' }}</td>
                         <td>
                             <a href="{{ route('clientes.edit', $c) }}" class="btn btn-warning btn-sm me-1" title="Editar">
                                 <i class="bi bi-pencil"></i>
@@ -157,7 +154,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center text-secondary">No hay clientes registrados.</td></tr>
+                    <tr><td colspan="9" class="text-center text-secondary">No hay clientes registrados.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -171,24 +168,6 @@
 {{-- Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Clientes por Estatus
-    const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
-    new Chart(ctxStatus, {
-        type: 'pie',
-        data: {
-            labels: {!! json_encode($conteoStatus->keys()) !!},
-            datasets: [{
-                data: {!! json_encode($conteoStatus->values()) !!},
-                backgroundColor: [
-                    '#198754', '#adb5bd', '#ffcd39', '#fd7e14', '#0dcaf0', '#dc3545'
-                ]
-            }]
-        },
-        options: {
-            plugins: { legend: { display: true, position: 'bottom' } }
-        }
-    });
-
     // Clientes por Tipo
     const ctxTipo = document.getElementById('graficoTipo').getContext('2d');
     new Chart(ctxTipo, {
@@ -199,6 +178,27 @@
                 data: {!! json_encode($conteoTipo->values()) !!},
                 backgroundColor: [
                     '#0d6efd', '#20c997', '#ffc107', '#6610f2', '#f06595', '#fd7e14'
+                ]
+            }]
+        },
+        options: {
+            plugins: { legend: { display: true, position: 'bottom' } }
+        }
+    });
+
+    // Clientes con RFC vs sin RFC
+    const ctxRfc = document.getElementById('graficoRfc').getContext('2d');
+    new Chart(ctxRfc, {
+        type: 'pie',
+        data: {
+            labels: ['Con RFC', 'Sin RFC'],
+            datasets: [{
+                data: [
+                    {{ $clientes->where('datoFiscal.rfc','!=', null)->count() }},
+                    {{ $clientes->where('datoFiscal.rfc', null)->count() }}
+                ],
+                backgroundColor: [
+                    '#198754', '#adb5bd'
                 ]
             }]
         },

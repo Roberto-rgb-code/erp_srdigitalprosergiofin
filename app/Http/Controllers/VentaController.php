@@ -6,7 +6,6 @@ use App\Models\Venta;
 use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\DetalleVenta;
-use App\Models\Pago;
 use Illuminate\Http\Request;
 use App\Exports\VentasExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -17,7 +16,7 @@ class VentaController extends Controller
     public function index(Request $request)
     {
         $clientes = Cliente::all();
-        $ventas = Venta::with('cliente')
+        $ventas = Venta::with(['cliente', 'productos'])
             ->when($request->cliente_id, fn($q, $cliente_id) => $q->where('cliente_id', $cliente_id))
             ->when($request->fecha_venta, fn($q, $fecha) => $q->where('fecha_venta', $fecha))
             ->when($request->tipo_venta, fn($q, $tipo) => $q->where('tipo_venta', 'ILIKE', "%$tipo%"))
@@ -53,27 +52,31 @@ class VentaController extends Controller
     {
         $clientes = Cliente::with('datoFiscal')->get();
         $productos = Producto::all();
-        return view('ventas.create', compact('clientes', 'productos'));
+        // Mapea a array asociativo para JS del front
+        $productosJson = $productos->keyBy('id')->map(function($p){
+            return [
+                'nombre' => $p->producto,
+                'sku' => $p->sku,
+                'precio' => (float)$p->precio_venta,
+                'stock' => (int)$p->cantidad,
+            ];
+        });
+        return view('ventas.create', compact('clientes', 'productos', 'productosJson'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'cliente_id'               => 'required|integer',
-            'fecha_venta'              => 'required|date',
-            'monto_total'              => 'required|numeric',
-            'estatus'                  => 'nullable|string|max:50',
-            'tipo_venta'               => 'nullable|string|max:50',
-            'comentarios'              => 'nullable|string',
-            'productos'                => 'required|array',
-            'productos.*.nombre_producto' => 'required|string|max:255',
-            'productos.*.sku'          => 'nullable|string|max:255',
-            'productos.*.no_serie'     => 'nullable|string|max:255',
-            'productos.*.precio_costo' => 'nullable|numeric',
-            'productos.*.precio_venta' => 'required|numeric|min:0',
-            'productos.*.cantidad'     => 'required|integer|min:1',
+            'cliente_id'   => 'required|integer',
+            'fecha_venta'  => 'required|date',
+            'monto_total'  => 'required|numeric',
+            'estatus'      => 'nullable|string|max:50',
+            'tipo_venta'   => 'nullable|string|max:50',
+            'comentarios'  => 'nullable|string',
+            // 'productos' => 'array', // opcional, validación personalizada
         ]);
 
+        // 1. Crear la venta
         $venta = Venta::create([
             'cliente_id'   => $validated['cliente_id'],
             'fecha_venta'  => $validated['fecha_venta'],
@@ -83,24 +86,19 @@ class VentaController extends Controller
             'comentarios'  => $validated['comentarios'] ?? null,
         ]);
 
-        foreach ($validated['productos'] as $detalle) {
-            DetalleVenta::create([
-                'venta_id'        => $venta->id,
-                'sku'             => $detalle['sku'] ?? null,
-                'no_serie'        => $detalle['no_serie'] ?? null,
-                'nombre_producto' => $detalle['nombre_producto'],
-                'precio_costo'    => $detalle['precio_costo'] ?? 0,
-                'precio_venta'    => $detalle['precio_venta'],
-                'cantidad'        => $detalle['cantidad'],
-                'subtotal'        => $detalle['cantidad'] * $detalle['precio_venta'],
-            ]);
-            // Actualiza inventario solo si el SKU existe
-            if (!empty($detalle['sku'])) {
-                $producto = Producto::where('sku', $detalle['sku'])->first();
-                if ($producto) {
-                    $producto->cantidad -= $detalle['cantidad'];
-                    $producto->save();
-                }
+        // 2. Asociar productos a la venta (detalle_venta)
+        $productos = $request->input('productos', []);
+        foreach ($productos as $producto_id => $info) {
+            $cantidad = intval($info['cantidad']);
+            $precio_unitario = floatval($info['precio_unitario']);
+            if ($cantidad > 0) {
+                $venta->productos()->attach($producto_id, [
+                    'cantidad' => $cantidad,
+                    'precio_unitario' => $precio_unitario,
+                ]);
+
+                // Opcional: Descontar inventario (stock)
+                Producto::where('id', $producto_id)->decrement('cantidad', $cantidad);
             }
         }
 
@@ -109,7 +107,7 @@ class VentaController extends Controller
 
     public function show(Venta $venta)
     {
-        $venta->load(['cliente.datoFiscal', 'detalles', 'pagos']);
+        $venta->load(['cliente.datoFiscal', 'pagos', 'productos']);
         return view('ventas.show', compact('venta'));
     }
 
@@ -117,26 +115,27 @@ class VentaController extends Controller
     {
         $clientes = Cliente::with('datoFiscal')->get();
         $productos = Producto::all();
-        $venta->load('detalles');
-        return view('ventas.edit', compact('venta', 'clientes', 'productos'));
+        $productosJson = $productos->keyBy('id')->map(function($p){
+            return [
+                'nombre' => $p->producto,
+                'sku' => $p->sku,
+                'precio' => (float)$p->precio_venta,
+                'stock' => (int)$p->cantidad,
+            ];
+        });
+        // Carga productos seleccionados si existe relación many-to-many
+        $venta->load('productos');
+        return view('ventas.edit', compact('venta', 'clientes', 'productos', 'productosJson'));
     }
-
     public function update(Request $request, Venta $venta)
     {
         $validated = $request->validate([
-            'cliente_id'               => 'required|integer',
-            'fecha_venta'              => 'required|date',
-            'monto_total'              => 'required|numeric',
-            'estatus'                  => 'nullable|string|max:50',
-            'tipo_venta'               => 'nullable|string|max:50',
-            'comentarios'              => 'nullable|string',
-            'productos'                => 'required|array',
-            'productos.*.nombre_producto' => 'required|string|max:255',
-            'productos.*.sku'          => 'nullable|string|max:255',
-            'productos.*.no_serie'     => 'nullable|string|max:255',
-            'productos.*.precio_costo' => 'nullable|numeric',
-            'productos.*.precio_venta' => 'required|numeric|min:0',
-            'productos.*.cantidad'     => 'required|integer|min:1',
+            'cliente_id'   => 'required|integer',
+            'fecha_venta'  => 'required|date',
+            'monto_total'  => 'required|numeric',
+            'estatus'      => 'nullable|string|max:50',
+            'tipo_venta'   => 'nullable|string|max:50',
+            'comentarios'  => 'nullable|string',
         ]);
 
         $venta->update([
@@ -148,25 +147,19 @@ class VentaController extends Controller
             'comentarios'  => $validated['comentarios'] ?? null,
         ]);
 
-        $venta->detalles()->delete();
-
-        foreach ($validated['productos'] as $detalle) {
-            DetalleVenta::create([
-                'venta_id'        => $venta->id,
-                'sku'             => $detalle['sku'] ?? null,
-                'no_serie'        => $detalle['no_serie'] ?? null,
-                'nombre_producto' => $detalle['nombre_producto'],
-                'precio_costo'    => $detalle['precio_costo'] ?? 0,
-                'precio_venta'    => $detalle['precio_venta'],
-                'cantidad'        => $detalle['cantidad'],
-                'subtotal'        => $detalle['cantidad'] * $detalle['precio_venta'],
-            ]);
-            if (!empty($detalle['sku'])) {
-                $producto = Producto::where('sku', $detalle['sku'])->first();
-                if ($producto) {
-                    $producto->cantidad -= $detalle['cantidad'];
-                    $producto->save();
-                }
+        // Actualiza los productos asociados:
+        // (1) Elimina los existentes
+        $venta->productos()->detach();
+        // (2) Asocia los nuevos (igual que en store)
+        $productos = $request->input('productos', []);
+        foreach ($productos as $producto_id => $info) {
+            $cantidad = intval($info['cantidad']);
+            $precio_unitario = floatval($info['precio_unitario']);
+            if ($cantidad > 0) {
+                $venta->productos()->attach($producto_id, [
+                    'cantidad' => $cantidad,
+                    'precio_unitario' => $precio_unitario,
+                ]);
             }
         }
 
@@ -175,7 +168,7 @@ class VentaController extends Controller
 
     public function destroy(Venta $venta)
     {
-        $venta->detalles()->delete();
+        $venta->productos()->detach(); // Borra detalle_venta
         $venta->delete();
         return redirect()->route('ventas.index')->with('success', 'Venta eliminada correctamente');
     }
@@ -187,7 +180,7 @@ class VentaController extends Controller
 
     public function exportPDF(Request $request)
     {
-        $ventas = Venta::with('cliente')->get();
+        $ventas = Venta::with(['cliente', 'productos'])->get();
         $pdf = PDF::loadView('ventas.export_pdf', compact('ventas'));
         return $pdf->download('ventas.pdf');
     }
@@ -195,7 +188,7 @@ class VentaController extends Controller
     // NOTA DE VENTA PDF
     public function notaVentaPDF(Venta $venta)
     {
-        $venta->load(['cliente.datoFiscal', 'detalles']);
+        $venta->load(['cliente.datoFiscal', 'productos']);
         $pdf = PDF::loadView('ventas.nota_venta_pdf', compact('venta'));
         return $pdf->download('nota_venta_' . $venta->id . '.pdf');
     }

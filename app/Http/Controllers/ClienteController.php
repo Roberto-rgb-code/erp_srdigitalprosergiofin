@@ -24,19 +24,23 @@ class ClienteController extends Controller
                 $q->where('rfc', 'ILIKE', "%{$request->rfc}%");
             });
         }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
 
         $clientes = $query->orderBy('id', 'desc')->paginate(15);
 
+        // Nuevas métricas rápidas y conteos para dashboard
         $allClientes = Cliente::with('datoFiscal')->get();
-        $conteoStatus = $allClientes->groupBy('status')->map->count();
         $conteoTipo   = $allClientes->groupBy('tipo_cliente')->map->count();
-        $creditoTotal = 0;
-        $saldoTotal   = 0;
+        $clientesConRfc = $allClientes->where('datoFiscal.rfc', '!=', null)->count();
+        $empresasDistintas = $allClientes->where('empresa', '!=', '')->unique('empresa')->count();
+        $contactosUnicos = $allClientes->where('contacto', '!=', '')->unique('contacto')->count();
 
-        return view('clientes.index', compact('clientes', 'conteoStatus', 'conteoTipo', 'creditoTotal', 'saldoTotal'));
+        return view('clientes.index', compact(
+            'clientes', 
+            'conteoTipo', 
+            'clientesConRfc', 
+            'empresasDistintas', 
+            'contactosUnicos'
+        ));
     }
 
     // Formulario crear
@@ -54,7 +58,6 @@ class ClienteController extends Controller
             'contacto'            => 'nullable|string|max:255',
             'direccion'           => 'nullable|string|max:255',
             'tipo_cliente'        => 'required|string|max:50',
-            'status'              => 'required|string|max:50',
 
             // Datos fiscales
             'nombre_fiscal'       => 'nullable|string|max:255',
@@ -66,7 +69,6 @@ class ClienteController extends Controller
         ], [
             'nombre_completo.required' => 'El campo Nombre completo es obligatorio.',
             'tipo_cliente.required'    => 'El campo Tipo de cliente es obligatorio.',
-            'status.required'          => 'El campo Estatus es obligatorio.',
         ]);
 
         if (empty($validated['nombre_completo'])) {
@@ -79,7 +81,6 @@ class ClienteController extends Controller
             'contacto'        => $validated['contacto'] ?? null,
             'direccion'       => $validated['direccion'] ?? null,
             'tipo_cliente'    => $validated['tipo_cliente'],
-            'status'          => $validated['status'],
         ]);
 
         // Submódulo: datos fiscales
@@ -125,7 +126,6 @@ class ClienteController extends Controller
             'contacto'            => 'nullable|string|max:255',
             'direccion'           => 'nullable|string|max:255',
             'tipo_cliente'        => 'required|string|max:50',
-            'status'              => 'required|string|max:50',
 
             // Datos fiscales
             'nombre_fiscal'       => 'nullable|string|max:255',
@@ -137,7 +137,6 @@ class ClienteController extends Controller
         ], [
             'nombre_completo.required' => 'El campo Nombre completo es obligatorio.',
             'tipo_cliente.required'    => 'El campo Tipo de cliente es obligatorio.',
-            'status.required'          => 'El campo Estatus es obligatorio.',
         ]);
 
         $cliente->update([
@@ -146,7 +145,6 @@ class ClienteController extends Controller
             'contacto'        => $validated['contacto'] ?? null,
             'direccion'       => $validated['direccion'] ?? null,
             'tipo_cliente'    => $validated['tipo_cliente'],
-            'status'          => $validated['status'],
         ]);
 
         // Actualiza o crea datos fiscales

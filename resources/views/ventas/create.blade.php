@@ -2,7 +2,6 @@
 @section('content')
 <div class="container">
     <h2>Nueva Venta</h2>
-
     @if($errors->any())
         <div class="alert alert-danger">
             <ul class="mb-0">
@@ -12,7 +11,6 @@
             </ul>
         </div>
     @endif
-
     <form method="POST" action="{{ route('ventas.store') }}">
         @csrf
         @include('ventas.partials.form')

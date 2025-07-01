@@ -17,7 +17,7 @@ class VentasExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        $query = Venta::with('cliente');
+        $query = Venta::with(['cliente.datoFiscal']);
         if (!empty($this->filters['cliente_id'])) {
             $query->where('cliente_id', $this->filters['cliente_id']);
         }
@@ -34,19 +34,30 @@ class VentasExport implements FromCollection, WithHeadings
 
         return $ventas->map(function ($v) {
             return [
-                'ID'           => $v->id,
-                'Cliente'      => $v->cliente->nombre ?? '',
-                'Fecha'        => $v->fecha_venta,
-                'Monto Total'  => $v->monto_total,
-                'Estatus'      => $v->estatus,
-                'Tipo de Venta'=> $v->tipo_venta,
-                'Comentarios'  => $v->comentarios,
+                'ID'            => $v->id,
+                'Cliente'       => $v->cliente->nombre_completo ?? '',
+                // 'RFC'        => $v->cliente->datoFiscal->rfc ?? '', // Descomenta si quieres RFC
+                'Fecha'         => $v->fecha_venta,
+                'Monto Total'   => $v->monto_total,
+                'Estatus'       => $v->estatus,
+                'Tipo de Venta' => $v->tipo_venta,
+                'Comentarios'   => $v->comentarios,
             ];
         });
     }
 
     public function headings(): array
     {
-        return ['ID', 'Cliente', 'Fecha', 'Monto Total', 'Estatus', 'Tipo de Venta', 'Comentarios'];
+        // Si agregas RFC, ponlo en los headings también
+        return [
+            'ID',
+            'Cliente',
+            // 'RFC',
+            'Fecha',
+            'Monto Total',
+            'Estatus',
+            'Tipo de Venta',
+            'Comentarios'
+        ];
     }
 }

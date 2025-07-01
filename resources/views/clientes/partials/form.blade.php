@@ -79,23 +79,9 @@
     @enderror
 </div>
 
-<div class="mb-3">
-    <label for="status" class="form-label">Estatus *</label>
-    <select
-        name="status"
-        id="status"
-        class="form-select @error('status') is-invalid @enderror"
-        required>
-        <option value="Activo" @selected(old('status', $cliente->status ?? '') == 'Activo')>Activo</option>
-        <option value="Inactivo" @selected(old('status', $cliente->status ?? '') == 'Inactivo')>Inactivo</option>
-    </select>
-    @error('status')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
-
 <hr>
 <h5 class="mb-2">Datos fiscales (opcional)</h5>
+
 <div class="mb-3">
     <label for="nombre_fiscal" class="form-label">Nombre fiscal</label>
     <input
@@ -108,6 +94,7 @@
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>
+
 <div class="mb-3">
     <label for="rfc" class="form-label">RFC</label>
     <input
@@ -120,6 +107,7 @@
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>
+
 <div class="mb-3">
     <label for="direccion_fiscal" class="form-label">Dirección fiscal</label>
     <input
@@ -132,6 +120,7 @@
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>
+
 <div class="mb-3">
     <label for="uso_cfdi" class="form-label">Uso de CFDI</label>
     <input
@@ -144,6 +133,7 @@
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>
+
 <div class="mb-3">
     <label for="correo" class="form-label">Correo electrónico</label>
     <input
@@ -156,6 +146,7 @@
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 </div>
+
 <div class="mb-3">
     <label for="regimen_fiscal" class="form-label">Régimen fiscal</label>
     <input

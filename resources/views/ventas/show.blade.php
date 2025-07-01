@@ -29,45 +29,73 @@
                 <dt class="col-sm-3">Comentarios</dt>
                 <dd class="col-sm-9">{{ $venta->comentarios ?? '-' }}</dd>
             </dl>
+
+            {{-- Sección: Productos vendidos --}}
+            <h5 class="mt-4 mb-3"><i class="bi bi-box-seam"></i> Productos vendidos</h5>
+            @if($venta->productos && $venta->productos->count())
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>SKU</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($venta->productos as $prod)
+                        <tr>
+                            <td>{{ $prod->producto }}</td>
+                            <td>{{ $prod->sku }}</td>
+                            <td class="text-center">{{ $prod->pivot->cantidad }}</td>
+                            <td>${{ number_format($prod->pivot->precio_unitario,2) }}</td>
+                            <td>
+                                ${{ number_format($prod->pivot->cantidad * $prod->pivot->precio_unitario,2) }}
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4" class="text-end">Total de venta:</th>
+                            <th>
+                                ${{ number_format($venta->productos->sum(function($prod){
+                                    return $prod->pivot->cantidad * $prod->pivot->precio_unitario;
+                                }),2) }}
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            @else
+                <div class="alert alert-warning">No hay productos registrados en esta venta.</div>
+            @endif
+
+            {{-- Datos fiscales del cliente --}}
+            @php
+                $datoFiscal = $venta->cliente->datoFiscal ?? null;
+            @endphp
+            @if($datoFiscal)
+            <div class="alert alert-info mb-4">
+                <div class="fw-bold mb-2">
+                    <i class="bi bi-file-earmark-text"></i> Datos fiscales del cliente
+                </div>
+                <ul class="mb-0 ps-3">
+                    <li><strong>Nombre fiscal:</strong> {{ $datoFiscal->nombre_fiscal ?? '-' }}</li>
+                    <li><strong>RFC:</strong> {{ $datoFiscal->rfc ?? '-' }}</li>
+                    <li><strong>Dirección fiscal:</strong> {{ $datoFiscal->direccion_fiscal ?? '-' }}</li>
+                    <li><strong>Correo:</strong> {{ $datoFiscal->correo ?? '-' }}</li>
+                    <li><strong>Uso CFDI:</strong> {{ $datoFiscal->uso_cfdi ?? '-' }}</li>
+                    <li><strong>Régimen fiscal:</strong> {{ $datoFiscal->regimen_fiscal ?? '-' }}</li>
+                </ul>
+            </div>
+            @endif
         </div>
     </div>
 
-    <div class="card shadow rounded-4 mb-4">
-        <div class="card-header bg-light fw-bold">Productos / Servicios</div>
-        <div class="card-body p-0">
-            <table class="table table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th>SKU</th>
-                        <th>No. Serie</th>
-                        <th>Producto/Servicio</th>
-                        <th>Precio Costo</th>
-                        <th>Precio Venta</th>
-                        <th>Cantidad</th>
-                        <th>Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($venta->detalles as $detalle)
-                        <tr>
-                            <td>{{ $detalle->sku ?? '-' }}</td>
-                            <td>{{ $detalle->no_serie ?? '-' }}</td>
-                            <td>{{ $detalle->nombre_producto ?? ($detalle->producto->nombre ?? '-') }}</td>
-                            <td>${{ number_format($detalle->precio_costo,2) }}</td>
-                            <td>${{ number_format($detalle->precio_venta,2) }}</td>
-                            <td>{{ $detalle->cantidad }}</td>
-                            <td>${{ number_format($detalle->subtotal,2) }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">No hay productos registrados.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
+    {{-- Pagos --}}
     @if($venta->pagos && $venta->pagos->count())
     <div class="card shadow rounded-4 mb-4">
         <div class="card-header bg-light fw-bold">Pagos</div>

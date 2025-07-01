@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Compra;
+use App\Models\Proveedor;
 use Illuminate\Http\Request;
 
 class CompraController extends Controller
 {
     public function index()
     {
-        $compras = Compra::orderByDesc('fecha_compra')->paginate(15);
+        // Carga compras con relación a proveedores para mostrar nombre en index
+        $compras = Compra::with('proveedor')
+                         ->orderByDesc('fecha_compra')
+                         ->paginate(15);
         return view('compras.index', compact('compras'));
     }
 
@@ -21,7 +25,7 @@ class CompraController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'proveedor'    => 'required|string|max:255',
+            'proveedor'    => 'required|string|max:255', // Campo libre
             'descripcion'  => 'required|string|max:500',
             'monto'        => 'nullable|numeric',
             'fecha_compra' => 'required|date',
@@ -29,8 +33,25 @@ class CompraController extends Controller
             'factura'      => 'nullable|boolean',
             'comentarios'  => 'nullable|string',
         ]);
-        $data['factura'] = $request->input('factura', 0);
-        Compra::create($data);
+
+        // Buscar o crear proveedor por nombre
+        $proveedor = Proveedor::firstOrCreate(
+            ['nombre' => $data['proveedor']],
+            ['tipo' => 'desconocido'] // Puedes cambiar el valor por defecto
+        );
+
+        // Crear compra con FK proveedor_id y nombre proveedor libre
+        $compra = new Compra();
+        $compra->proveedor_id = $proveedor->id;
+        $compra->proveedor = $data['proveedor']; // Guarda nombre proveedor libre
+        $compra->descripcion = $data['descripcion'];
+        $compra->monto = $data['monto'] ?? null;
+        $compra->fecha_compra = $data['fecha_compra'];
+        $compra->metodo_pago = $data['metodo_pago'] ?? null;
+        $compra->factura = $data['factura'] ?? 0;
+        $compra->comentarios = $data['comentarios'] ?? null;
+        $compra->save();
+
         return redirect()->route('compras.index')->with('success', 'Compra registrada correctamente.');
     }
 
@@ -55,8 +76,24 @@ class CompraController extends Controller
             'factura'      => 'nullable|boolean',
             'comentarios'  => 'nullable|string',
         ]);
-        $data['factura'] = $request->input('factura', 0);
-        $compra->update($data);
+
+        // Buscar o crear proveedor
+        $proveedor = Proveedor::firstOrCreate(
+            ['nombre' => $data['proveedor']],
+            ['tipo' => 'desconocido']
+        );
+
+        // Actualizar compra
+        $compra->proveedor_id = $proveedor->id;
+        $compra->proveedor = $data['proveedor'];
+        $compra->descripcion = $data['descripcion'];
+        $compra->monto = $data['monto'] ?? null;
+        $compra->fecha_compra = $data['fecha_compra'];
+        $compra->metodo_pago = $data['metodo_pago'] ?? null;
+        $compra->factura = $data['factura'] ?? 0;
+        $compra->comentarios = $data['comentarios'] ?? null;
+        $compra->save();
+
         return redirect()->route('compras.index')->with('success', 'Compra actualizada correctamente.');
     }
 

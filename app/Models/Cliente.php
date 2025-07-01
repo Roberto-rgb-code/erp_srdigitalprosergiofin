@@ -15,7 +15,7 @@ class Cliente extends Model
         'contacto',
         'direccion',
         'tipo_cliente',
-        'status',
+        // 'status',  // ← ¡Ya no debe estar aquí!
         // agrega otros campos si los usas
     ];
 

@@ -4,21 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DiarioContable extends Model
+class DetalleVenta extends Model
 {
-    protected $table = 'diario_contable';
+    protected $table = 'detalle_venta';
 
     protected $fillable = [
-        'poliza_contable_id', 'cuenta_contable_id', 'fecha', 'concepto', 'debe', 'haber', 'referencia'
+        'venta_id',
+        'producto_id',
+        'cantidad',
+        'precio_unitario',
     ];
 
-    public function poliza()
+    // Relación inversa con Venta
+    public function venta()
     {
-        return $this->belongsTo(PolizaContable::class, 'poliza_contable_id');
+        return $this->belongsTo(\App\Models\Venta::class, 'venta_id');
     }
 
-    public function cuentaContable()
+    // Relación inversa con Producto
+    public function producto()
     {
-        return $this->belongsTo(CuentaContable::class, 'cuenta_contable_id');
+        return $this->belongsTo(\App\Models\Producto::class, 'producto_id');
     }
 }

@@ -26,10 +26,17 @@ class Venta extends Model
         return $this->belongsTo(\App\Models\Cliente::class, 'cliente_id');
     }
 
-    // Relación con detalles de venta
+    // Relación con detalles de venta (detalle_venta)
     public function detalles()
     {
         return $this->hasMany(\App\Models\DetalleVenta::class, 'venta_id');
+    }
+
+    // Relación many-to-many con productos (a través de detalle_venta)
+    public function productos()
+    {
+        return $this->belongsToMany(\App\Models\Producto::class, 'detalle_venta', 'venta_id', 'producto_id')
+            ->withPivot('cantidad', 'precio_unitario');
     }
 
     // Relación con pagos
@@ -38,7 +45,7 @@ class Venta extends Model
         return $this->hasMany(\App\Models\Pago::class, 'venta_id');
     }
 
-    // Atributo accesor para folio formateado
+    // Accesor para folio formateado (VEN-00001, etc.)
     public function getFolioAttribute()
     {
         return 'VEN-' . str_pad($this->id, 5, '0', STR_PAD_LEFT);
