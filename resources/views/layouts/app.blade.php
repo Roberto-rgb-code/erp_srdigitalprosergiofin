@@ -100,7 +100,7 @@
                     <i class="bi bi-wallet2 me-2"></i> Créditos
                 </a>
                 <a class="nav-link {{ request()->routeIs('compras.*') ? 'active' : '' }}" href="{{ route('compras.index') }}">
-                    <i class="bi bi-basket3-fill me-2"></i> Compras
+                    <i class="bi bi-basket3-fill me-2"></i> Proveedores
                 </a>
                 <a class="nav-link {{ request()->routeIs('punto_venta.*') ? 'active' : '' }}" href="{{ route('punto_venta.index') }}">
                     <i class="bi bi-receipt-cutoff me-2"></i> Punto de Venta
