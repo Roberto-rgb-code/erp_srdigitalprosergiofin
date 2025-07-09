@@ -30,7 +30,7 @@
                 <dd class="col-sm-9">{{ $venta->comentarios ?? '-' }}</dd>
             </dl>
 
-            {{-- Sección: Productos vendidos --}}
+            {{-- Productos vendidos --}}
             <h5 class="mt-4 mb-3"><i class="bi bi-box-seam"></i> Productos vendidos</h5>
             @if($venta->productos && $venta->productos->count())
             <div class="table-responsive mb-4">
@@ -41,6 +41,7 @@
                             <th>SKU</th>
                             <th>Cantidad</th>
                             <th>Precio Unitario</th>
+                            <th>Número(s) de Serie</th>
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -52,6 +53,24 @@
                             <td class="text-center">{{ $prod->pivot->cantidad }}</td>
                             <td>${{ number_format($prod->pivot->precio_unitario,2) }}</td>
                             <td>
+                                @php
+                                    $stockIds = $prod->pivot->stock_unit_ids ?? '[]';
+                                    if (is_string($stockIds)) $stockIds = json_decode($stockIds, true);
+                                    if (!is_array($stockIds)) $stockIds = [];
+                                    $numerosSerie = [];
+                                    if(count($stockIds)) {
+                                        $numerosSerie = $prod->stockUnits->whereIn('id', $stockIds)->pluck('numero_serie')->toArray();
+                                    }
+                                @endphp
+                                @if(count($numerosSerie))
+                                    @foreach($numerosSerie as $ns)
+                                        <span class="badge bg-info text-dark" style="font-weight:600; margin:2px 2px;">{{ $ns }}</span>
+                                    @endforeach
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
                                 ${{ number_format($prod->pivot->cantidad * $prod->pivot->precio_unitario,2) }}
                             </td>
                         </tr>
@@ -59,7 +78,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="4" class="text-end">Total de venta:</th>
+                            <th colspan="5" class="text-end">Total de venta:</th>
                             <th>
                                 ${{ number_format($venta->productos->sum(function($prod){
                                     return $prod->pivot->cantidad * $prod->pivot->precio_unitario;
@@ -92,46 +111,46 @@
                 </ul>
             </div>
             @endif
-        </div>
-    </div>
 
-    {{-- Pagos --}}
-    @if($venta->pagos && $venta->pagos->count())
-    <div class="card shadow rounded-4 mb-4">
-        <div class="card-header bg-light fw-bold">Pagos</div>
-        <div class="card-body p-0">
-            <table class="table table-sm table-bordered mb-0">
-                <thead>
-                    <tr>
-                        <th>Monto</th>
-                        <th>Fecha</th>
-                        <th>Método</th>
-                        <th>Comentarios</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($venta->pagos as $pago)
-                        <tr>
-                            <td>${{ number_format($pago->monto,2) }}</td>
-                            <td>{{ $pago->fecha ?? '-' }}</td>
-                            <td>{{ $pago->metodo_pago ?? '-' }}</td>
-                            <td>{{ $pago->comentarios ?? '-' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @endif
+            {{-- Pagos --}}
+            @if($venta->pagos && $venta->pagos->count())
+            <div class="card shadow rounded-4 mb-4">
+                <div class="card-header bg-light fw-bold">Pagos</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Monto</th>
+                                <th>Fecha</th>
+                                <th>Método</th>
+                                <th>Comentarios</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($venta->pagos as $pago)
+                                <tr>
+                                    <td>${{ number_format($pago->monto,2) }}</td>
+                                    <td>{{ $pago->fecha ?? '-' }}</td>
+                                    <td>{{ $pago->metodo_pago ?? '-' }}</td>
+                                    <td>{{ $pago->comentarios ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
 
-    <div class="d-flex gap-2">
-        <a href="{{ route('ventas.index') }}" class="btn btn-secondary rounded-pill">Volver</a>
-        <a href="{{ route('ventas.nota', $venta) }}" class="btn btn-outline-danger rounded-pill" target="_blank">
-            <i class="bi bi-file-earmark-pdf"></i> Descargar Nota de Venta PDF
-        </a>
-        <button class="btn btn-outline-success rounded-pill" onclick="alert('Próximamente: integración con SAT para factura timbrada');" type="button">
-            <i class="bi bi-file-earmark-medical"></i> Generar Factura (SAT)
-        </button>
+            <div class="d-flex gap-2">
+                <a href="{{ route('ventas.index') }}" class="btn btn-secondary rounded-pill">Volver</a>
+                <a href="{{ route('ventas.nota', $venta) }}" class="btn btn-outline-danger rounded-pill" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i> Descargar Nota de Venta PDF
+                </a>
+                <button class="btn btn-outline-success rounded-pill" onclick="alert('Próximamente: integración con SAT para factura timbrada');" type="button">
+                    <i class="bi bi-file-earmark-medical"></i> Generar Factura (SAT)
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

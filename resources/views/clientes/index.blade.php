@@ -17,6 +17,13 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-1"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     {{-- Métricas rápidas --}}
     <div class="row mb-4 g-3">
         <div class="col-6 col-md-3">

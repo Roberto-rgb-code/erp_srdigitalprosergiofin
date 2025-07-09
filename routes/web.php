@@ -45,6 +45,7 @@ use App\Http\Controllers\SeguimientoCxpController;
 use App\Http\Controllers\GastoFijoController;
 use App\Http\Controllers\DatoFiscalClienteController;
 use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\BalanceCableadoController;
 
 // Ruta principal: redirecciona al dashboard o login
 Route::get('/', function () {
@@ -93,6 +94,12 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('cableado')->group(function () {
         Route::get('export-excel', [CableadoController::class, 'exportExcel'])->name('cableado.export.excel');
         Route::get('export-pdf',   [CableadoController::class, 'exportPDF'])->name('cableado.export.pdf');
+    });
+
+    // Rutas para el módulo cableado y su submódulo balance
+    Route::resource('cableado', CableadoController::class);
+    Route::prefix('cableado/{cableado}')->group(function () {
+        Route::resource('balance', BalanceCableadoController::class)->shallow();
     });
 
     Route::prefix('vehiculos')->group(function () {
@@ -249,6 +256,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('inventario', InventarioController::class);
     Route::get('inventario-export-excel', [InventarioController::class, 'exportExcel'])->name('inventario.export.excel');
     Route::get('inventario-export-pdf',   [InventarioController::class, 'exportPDF'])->name('inventario.export.pdf');
+    Route::get('inventario/etiqueta/{stockUnit}', [InventarioController::class, 'exportEtiquetaPDF'])->name('inventario.export.etiqueta');
+
 });
 
 // Autenticación (login, registro, etc)

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Venta;
 use App\Models\Cliente;
 use App\Models\Producto;
-use App\Models\DetalleVenta;
+use App\Models\StockUnit;
 use Illuminate\Http\Request;
 use App\Exports\VentasExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -24,23 +24,23 @@ class VentaController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(15);
 
+        // MÉTRICAS PARA DASHBOARD
+        // Ventas por Mes (YYYY-MM => total)
         $ventasPorMes = Venta::selectRaw("to_char(fecha_venta, 'YYYY-MM') as mes, SUM(monto_total) as total")
-            ->whereYear('fecha_venta', now()->year)
-            ->groupByRaw("mes")
-            ->orderByRaw("mes")
-            ->pluck('total', 'mes')
-            ->toArray();
+            ->groupBy('mes')->orderBy('mes')
+            ->pluck('total', 'mes')->toArray();
 
+        // Ventas por Estatus (estatus => count)
         $ventasPorEstatus = Venta::selectRaw('estatus, COUNT(*) as total')
             ->groupBy('estatus')
-            ->pluck('total', 'estatus')
-            ->toArray();
+            ->pluck('total', 'estatus')->toArray();
 
+        // Top 5 Clientes (cliente_id => total vendido)
         $topClientes = Venta::selectRaw('cliente_id, SUM(monto_total) as total')
             ->with('cliente')
             ->groupBy('cliente_id')
             ->orderByDesc('total')
-            ->limit(5)
+            ->take(5)
             ->get();
 
         return view('ventas.index', compact(
@@ -51,14 +51,20 @@ class VentaController extends Controller
     public function create()
     {
         $clientes = Cliente::with('datoFiscal')->get();
-        $productos = Producto::all();
-        // Mapea a array asociativo para JS del front
+        $productos = Producto::with('stockUnits')->get();
         $productosJson = $productos->keyBy('id')->map(function($p){
             return [
-                'nombre' => $p->producto,
-                'sku' => $p->sku,
-                'precio' => (float)$p->precio_venta,
-                'stock' => (int)$p->cantidad,
+                'nombre'   => $p->producto,
+                'sku'      => $p->sku,
+                'precio'   => (float)$p->precio_venta,
+                'stock'    => (int)$p->cantidad,
+                // Unidades físicas disponibles
+                'unidades' => $p->stockUnits->whereNull('vendida_en')->values()->map(function($u){
+                    return [
+                        'id' => $u->id,
+                        'numero_serie' => $u->numero_serie,
+                    ];
+                }),
             ];
         });
         return view('ventas.create', compact('clientes', 'productos', 'productosJson'));
@@ -73,7 +79,6 @@ class VentaController extends Controller
             'estatus'      => 'nullable|string|max:50',
             'tipo_venta'   => 'nullable|string|max:50',
             'comentarios'  => 'nullable|string',
-            // 'productos' => 'array', // opcional, validación personalizada
         ]);
 
         // 1. Crear la venta
@@ -91,13 +96,19 @@ class VentaController extends Controller
         foreach ($productos as $producto_id => $info) {
             $cantidad = intval($info['cantidad']);
             $precio_unitario = floatval($info['precio_unitario']);
+            $stock_unit_ids = isset($info['stock_unit_ids']) ? $info['stock_unit_ids'] : [];
             if ($cantidad > 0) {
                 $venta->productos()->attach($producto_id, [
-                    'cantidad' => $cantidad,
+                    'cantidad'        => $cantidad,
                     'precio_unitario' => $precio_unitario,
+                    'stock_unit_ids'  => json_encode($stock_unit_ids),
                 ]);
 
-                // Opcional: Descontar inventario (stock)
+                // Marca esas unidades físicas como "vendidas" (si tienes el campo)
+                if (is_array($stock_unit_ids) && count($stock_unit_ids) > 0) {
+                    StockUnit::whereIn('id', $stock_unit_ids)->update(['vendida_en' => $venta->id]);
+                }
+
                 Producto::where('id', $producto_id)->decrement('cantidad', $cantidad);
             }
         }
@@ -107,26 +118,34 @@ class VentaController extends Controller
 
     public function show(Venta $venta)
     {
-        $venta->load(['cliente.datoFiscal', 'pagos', 'productos']);
+        $venta->load(['cliente.datoFiscal', 'pagos', 'productos.stockUnits']);
         return view('ventas.show', compact('venta'));
     }
 
     public function edit(Venta $venta)
     {
         $clientes = Cliente::with('datoFiscal')->get();
-        $productos = Producto::all();
+        $productos = Producto::with('stockUnits')->get();
         $productosJson = $productos->keyBy('id')->map(function($p){
             return [
-                'nombre' => $p->producto,
-                'sku' => $p->sku,
-                'precio' => (float)$p->precio_venta,
-                'stock' => (int)$p->cantidad,
+                'nombre'   => $p->producto,
+                'sku'      => $p->sku,
+                'precio'   => (float)$p->precio_venta,
+                'stock'    => (int)$p->cantidad,
+                // Unidades físicas disponibles (no vendidas)
+                'unidades' => $p->stockUnits->whereNull('vendida_en')->values()->map(function($u){
+                    return [
+                        'id' => $u->id,
+                        'numero_serie' => $u->numero_serie,
+                    ];
+                }),
             ];
         });
-        // Carga productos seleccionados si existe relación many-to-many
+
         $venta->load('productos');
         return view('ventas.edit', compact('venta', 'clientes', 'productos', 'productosJson'));
     }
+
     public function update(Request $request, Venta $venta)
     {
         $validated = $request->validate([
@@ -147,19 +166,24 @@ class VentaController extends Controller
             'comentarios'  => $validated['comentarios'] ?? null,
         ]);
 
-        // Actualiza los productos asociados:
-        // (1) Elimina los existentes
+        // Elimina productos actuales
         $venta->productos()->detach();
-        // (2) Asocia los nuevos (igual que en store)
+
+        // (igual que en store)
         $productos = $request->input('productos', []);
         foreach ($productos as $producto_id => $info) {
             $cantidad = intval($info['cantidad']);
             $precio_unitario = floatval($info['precio_unitario']);
+            $stock_unit_ids = isset($info['stock_unit_ids']) ? $info['stock_unit_ids'] : [];
             if ($cantidad > 0) {
                 $venta->productos()->attach($producto_id, [
-                    'cantidad' => $cantidad,
+                    'cantidad'        => $cantidad,
                     'precio_unitario' => $precio_unitario,
+                    'stock_unit_ids'  => json_encode($stock_unit_ids),
                 ]);
+                if (is_array($stock_unit_ids) && count($stock_unit_ids) > 0) {
+                    StockUnit::whereIn('id', $stock_unit_ids)->update(['vendida_en' => $venta->id]);
+                }
             }
         }
 
@@ -168,7 +192,7 @@ class VentaController extends Controller
 
     public function destroy(Venta $venta)
     {
-        $venta->productos()->detach(); // Borra detalle_venta
+        $venta->productos()->detach();
         $venta->delete();
         return redirect()->route('ventas.index')->with('success', 'Venta eliminada correctamente');
     }
@@ -185,7 +209,6 @@ class VentaController extends Controller
         return $pdf->download('ventas.pdf');
     }
 
-    // NOTA DE VENTA PDF
     public function notaVentaPDF(Venta $venta)
     {
         $venta->load(['cliente.datoFiscal', 'productos']);
@@ -193,7 +216,6 @@ class VentaController extends Controller
         return $pdf->download('nota_venta_' . $venta->id . '.pdf');
     }
 
-    // FACTURA PDF (Botón sólo visible, integración SAT pendiente)
     public function facturaPDF(Venta $venta)
     {
         return back()->with('info', 'La generación de factura timbrada estará disponible próximamente.');

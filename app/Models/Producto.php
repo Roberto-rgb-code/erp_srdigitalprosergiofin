@@ -46,4 +46,10 @@ class Producto extends Model
             }
         });
     }
+
+    public function stockUnits()
+{
+    return $this->hasMany(\App\Models\StockUnit::class, 'producto_id');
+}
+
 }

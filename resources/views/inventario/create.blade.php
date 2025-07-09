@@ -40,10 +40,6 @@
                 <input type="text" name="sku" id="sku" class="form-control" required value="{{ old('sku') }}">
             </div>
             <div class="col-md-3">
-                <label for="numero_serie">No. Serie</label>
-                <input type="text" name="numero_serie" id="numero_serie" class="form-control" value="{{ old('numero_serie') }}">
-            </div>
-            <div class="col-md-3">
                 <label for="cantidad">Cantidad *</label>
                 <input type="number" name="cantidad" id="cantidad" min="1" class="form-control" required value="{{ old('cantidad', 1) }}">
             </div>
@@ -62,6 +58,11 @@
             <div class="col-md-3">
                 <label for="costo_total">Costo Total Neto *</label>
                 <input type="number" name="costo_total" id="costo_total" min="0" step="0.01" class="form-control" required value="{{ old('costo_total', 0) }}">
+            </div>
+            <div class="col-md-12">
+                <div class="alert alert-info mt-2">
+                    El número de serie de cada unidad podrá ser gestionado después del alta del producto desde la vista detallada.
+                </div>
             </div>
         </div>
 

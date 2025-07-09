@@ -20,7 +20,7 @@
             <tr>
                 <th>Folio</th>
                 <th>Cliente</th>
-                {{-- <th>RFC</th> --}}
+                <th>RFC</th>
                 <th>Fecha</th>
                 <th>Monto Total</th>
                 <th>Estatus</th>
@@ -34,7 +34,7 @@
             <tr>
                 <td>{{ $v->folio }}</td>
                 <td>{{ $v->cliente->nombre_completo ?? '-' }}</td>
-                {{-- <td>{{ $v->cliente->datoFiscal->rfc ?? '-' }}</td> --}}
+                <td>{{ $v->cliente->datoFiscal->rfc ?? '-' }}</td>
                 <td>{{ $v->fecha_venta }}</td>
                 <td class="text-end">${{ number_format($v->monto_total,2) }}</td>
                 <td>{{ $v->estatus }}</td>
@@ -44,7 +44,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="text-end">TOTAL</td>
+                <td colspan="4" class="text-end">TOTAL</td>
                 <td class="text-end">${{ number_format($granTotal,2) }}</td>
                 <td colspan="2"></td>
             </tr>

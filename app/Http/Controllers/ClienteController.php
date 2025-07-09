@@ -16,8 +16,10 @@ class ClienteController extends Controller
         $query = Cliente::with('datoFiscal');
 
         if ($request->filled('nombre')) {
-            $query->where('nombre_completo', 'ILIKE', "%{$request->nombre}%")
+            $query->where(function ($q) use ($request) {
+                $q->where('nombre_completo', 'ILIKE', "%{$request->nombre}%")
                   ->orWhere('empresa', 'ILIKE', "%{$request->nombre}%");
+            });
         }
         if ($request->filled('rfc')) {
             $query->whereHas('datoFiscal', function($q) use ($request) {
@@ -27,7 +29,7 @@ class ClienteController extends Controller
 
         $clientes = $query->orderBy('id', 'desc')->paginate(15);
 
-        // Nuevas métricas rápidas y conteos para dashboard
+        // Métricas para dashboard clientes
         $allClientes = Cliente::with('datoFiscal')->get();
         $conteoTipo   = $allClientes->groupBy('tipo_cliente')->map->count();
         $clientesConRfc = $allClientes->where('datoFiscal.rfc', '!=', null)->count();
@@ -108,12 +110,14 @@ class ClienteController extends Controller
     // Detalle de cliente
     public function show(Cliente $cliente)
     {
+        $cliente->load('datoFiscal');
         return view('clientes.show', compact('cliente'));
     }
 
     // Formulario editar
     public function edit(Cliente $cliente)
     {
+        $cliente->load('datoFiscal');
         return view('clientes.edit', compact('cliente'));
     }
 
@@ -175,8 +179,15 @@ class ClienteController extends Controller
     // Eliminar cliente
     public function destroy(Cliente $cliente)
     {
-        $cliente->delete();
-        return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente');
+        try {
+            $cliente->delete();
+            return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == '23503') {
+                return redirect()->route('clientes.index')->with('error', 'No puedes borrar este cliente porque tiene registros asociados en otros módulos (por ejemplo, desarrollo de software, ventas, etc).');
+            }
+            return redirect()->route('clientes.index')->with('error', 'Ocurrió un error al intentar eliminar el cliente.');
+        }
     }
 
     // Exportar Excel

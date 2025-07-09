@@ -78,7 +78,8 @@ class CableadoController extends Controller
 
     public function show(Cableado $cableado)
     {
-        $cableado->load(['cliente', 'responsable']);
+        // Aquí agregamos la carga de la relación balances y responsable de cada balance
+        $cableado->load(['cliente', 'responsable', 'balances.responsable']);
         return view('cableado.show', compact('cableado'));
     }
 
@@ -130,15 +131,14 @@ class CableadoController extends Controller
     }
 
     public function actualizarEstado(Request $request, Cableado $cableado)
-{
-    $request->validate([
-        'estatus' => 'required|string|in:Planeado,En curso,Finalizado',
-    ]);
+    {
+        $request->validate([
+            'estatus' => 'required|string|in:Planeado,En curso,Finalizado',
+        ]);
 
-    $cableado->estatus = $request->estatus;
-    $cableado->save();
+        $cableado->estatus = $request->estatus;
+        $cableado->save();
 
-    return response()->json(['success' => true]);
-}
-
+        return response()->json(['success' => true]);
+    }
 }

@@ -38,10 +38,6 @@
         <input type="text" name="sku" class="form-control" required value="{{ old('sku', $producto->sku ?? '') }}">
     </div>
     <div class="col-md-3">
-        <label>No. Serie</label>
-        <input type="text" name="numero_serie" class="form-control" value="{{ old('numero_serie', $producto->numero_serie ?? '') }}">
-    </div>
-    <div class="col-md-3">
         <label>Cantidad *</label>
         <input type="number" name="cantidad" min="0" class="form-control" required value="{{ old('cantidad', $producto->cantidad ?? 0) }}">
     </div>

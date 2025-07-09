@@ -35,4 +35,10 @@ class Cableado extends Model
     {
         return $this->belongsTo(Empleado::class, 'responsable_id');
     }
+
+    public function balances()
+{
+    return $this->hasMany(BalanceCableado::class);
+}
+
 }

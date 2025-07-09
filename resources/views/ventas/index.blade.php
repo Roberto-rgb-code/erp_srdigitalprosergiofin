@@ -91,6 +91,7 @@
 
     {{-- Gráficos --}}
     <div class="row mb-5 g-3">
+        @if(isset($ventasPorMes) && count($ventasPorMes))
         <div class="col-lg-6">
             <div class="card h-100">
                 <div class="card-header bg-white fw-bold">Ventas por Mes</div>
@@ -99,6 +100,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if(isset($ventasPorEstatus) && count($ventasPorEstatus))
         <div class="col-lg-6">
             <div class="card h-100">
                 <div class="card-header bg-white fw-bold">Ventas por Estatus</div>
@@ -107,6 +110,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     {{-- Tabla de Ventas --}}
@@ -121,6 +125,7 @@
                     <th>Monto Total</th>
                     <th>Estatus</th>
                     <th>Tipo</th>
+                    <th>Números de Serie</th>
                     <th style="min-width:160px;">Acciones</th>
                 </tr>
             </thead>
@@ -144,6 +149,27 @@
                             @endif
                         </td>
                         <td class="text-center">{{ $v->tipo_venta }}</td>
+                        <td>
+                            @php
+                                $serieList = [];
+                                foreach ($v->productos as $producto) {
+                                    $stockIds = $producto->pivot->stock_unit_ids ?? '[]';
+                                    if (is_string($stockIds)) $stockIds = json_decode($stockIds, true);
+                                    if (!is_array($stockIds)) $stockIds = [];
+                                    if (count($stockIds)) {
+                                        $numerosSerie = $producto->stockUnits->whereIn('id', $stockIds)->pluck('numero_serie')->toArray();
+                                        $serieList = array_merge($serieList, $numerosSerie);
+                                    }
+                                }
+                            @endphp
+                            @if(count($serieList))
+                                @foreach($serieList as $serie)
+                                    <span class="badge bg-info text-dark" style="font-weight:600; margin: 2px;">{{ $serie }}</span>
+                                @endforeach
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td class="text-center">
                             <a href="{{ route('ventas.show', $v) }}" class="btn btn-sm btn-info mb-1" title="Ver detalles"><i class="bi bi-eye"></i></a>
                             <a href="{{ route('ventas.edit', $v) }}" class="btn btn-sm btn-warning mb-1" title="Editar"><i class="bi bi-pencil"></i></a>
@@ -164,7 +190,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center text-muted">No hay ventas registradas.</td>
+                        <td colspan="9" class="text-center text-muted">No hay ventas registradas.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -175,6 +201,9 @@
     </div>
 
     {{-- Top Clientes --}}
+    @php
+        $topClientes = $topClientes ?? collect();
+    @endphp
     <div class="my-5">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white fw-bold">Top 5 Clientes por monto vendido</div>

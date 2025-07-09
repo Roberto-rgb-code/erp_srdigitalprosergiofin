@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('content')
     <h2>Proyectos de Cableado Estructurado</h2>
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -91,9 +92,9 @@
                 <td>{{ $p->nombre_proyecto }}</td>
                 <td>{{ $p->cliente->nombre_completo ?? '-' }}</td>
                 <td>{{ $p->tipo_instalacion }}</td>
-                <td>{{ Str::limit($p->direccion, 25) }}</td>
+                <td>{{ \Illuminate\Support\Str::limit($p->direccion, 25) }}</td>
                 <td>{{ $p->fecha_inicio }}</td>
-                <td>{{ $p->fecha_fin }}</td>
+                <td>{{ $p->fecha_fin ?? '-' }}</td>
                 <td>{{ $p->responsable->nombre ?? '-' }}</td>
                 <td>
                     <span class="badge
@@ -107,14 +108,15 @@
                 <td>
                     <a href="{{ route('cableado.show', $p) }}" class="btn btn-info btn-sm">Ver</a>
                     <a href="{{ route('cableado.edit', $p) }}" class="btn btn-warning btn-sm">Editar</a>
-                    <form action="{{ route('cableado.destroy', $p) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('¿Eliminar?')">
-                        @csrf @method('DELETE')
+                    <form action="{{ route('cableado.destroy', $p) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('¿Eliminar este proyecto?')">
+                        @csrf
+                        @method('DELETE')
                         <button class="btn btn-danger btn-sm">Borrar</button>
                     </form>
                 </td>
             </tr>
         @empty
-            <tr><td colspan="9">No hay proyectos registrados.</td></tr>
+            <tr><td colspan="9" class="text-center">No hay proyectos registrados.</td></tr>
         @endforelse
         </tbody>
     </table>
@@ -161,7 +163,7 @@
             labels: {!! json_encode($dataEstado->keys()) !!},
             datasets: [{
                 data: {!! json_encode($dataEstado->values()) !!},
-                backgroundColor: ['#e9c46a','#f4a261','#2a9d8f'],
+                backgroundColor: ['#e9c46a', '#f4a261', '#2a9d8f'],
                 borderRadius: 8
             }]
         },
@@ -174,11 +176,8 @@
 
     // === Gráfico de CLIENTE ===
     @php
-        $dataCliente = $cableados->groupBy('cliente_id')
-            ->map(fn($items) => $items->count());
-        $clientesNombres = $cableados->mapWithKeys(function($item){
-            return [$item->cliente_id => $item->cliente->nombre_completo ?? 'Sin cliente'];
-        });
+        $dataCliente = $cableados->groupBy('cliente_id')->map->count();
+        $clientesNombres = $cableados->mapWithKeys(fn($item) => [$item->cliente_id => $item->cliente->nombre_completo ?? 'Sin cliente']);
     @endphp
     const ctxCliente = document.getElementById('graficoCliente').getContext('2d');
     new Chart(ctxCliente, {

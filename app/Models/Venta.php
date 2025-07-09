@@ -36,7 +36,7 @@ class Venta extends Model
     public function productos()
     {
         return $this->belongsToMany(\App\Models\Producto::class, 'detalle_venta', 'venta_id', 'producto_id')
-            ->withPivot('cantidad', 'precio_unitario');
+            ->withPivot('cantidad', 'precio_unitario', 'stock_unit_ids'); // <- ACTUALIZADO
     }
 
     // Relación con pagos
@@ -49,5 +49,13 @@ class Venta extends Model
     public function getFolioAttribute()
     {
         return 'VEN-' . str_pad($this->id, 5, '0', STR_PAD_LEFT);
+    }
+
+    // Helper: obtener stockUnits vendidas de un producto específico
+    public function stockUnitsVendidas($productoId)
+    {
+        $pivot = $this->productos->firstWhere('id', $productoId)?->pivot;
+        $ids = $pivot && $pivot->stock_unit_ids ? json_decode($pivot->stock_unit_ids, true) : [];
+        return \App\Models\StockUnit::whereIn('id', $ids)->get();
     }
 }

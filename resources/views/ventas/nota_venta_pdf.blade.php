@@ -6,16 +6,18 @@
     <title>Nota de Venta #{{ $venta->folio ?? $venta->id }}</title>
     <style>
         body { font-family: Arial, sans-serif; color: #222; font-size: 13px; }
-        .title { font-size: 1.6em; font-weight: bold; text-align: center; margin-bottom: 10px; }
-        .datos { margin-bottom: 18px; }
-        .datos th { text-align: left; padding-right: 8px; }
-        .totales { text-align: right; font-size: 1.1em; margin-top: 10px; }
-        .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 8px; }
-        .alert-fiscal { background: #e7f1ff; padding: 10px; border-radius: 6px; margin-bottom: 15px;}
-        .productos-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
-        .productos-table th, .productos-table td { border: 1px solid #bbb; padding: 5px 7px; text-align: left; }
+        .title { font-size: 1.7em; font-weight: bold; text-align: center; margin-bottom: 12px; }
+        .datos { margin-bottom: 18px; width: 100%; }
+        .datos th { text-align: left; padding-right: 10px; font-weight: normal; }
+        .datos td { padding-bottom: 2px; }
+        .section-title { font-weight: bold; margin-top: 18px; margin-bottom: 8px; }
+        .alert-fiscal { background: #e7f1ff; padding: 10px 16px; border-radius: 6px; margin-bottom: 14px;}
+        .productos-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .productos-table th, .productos-table td { border: 1px solid #bbb; padding: 5px 7px; }
         .productos-table th { background: #f0f7ff; }
         .text-end { text-align: right; }
+        .totales { text-align: right; font-size: 1.13em; margin-top: 12px; }
+        .thankyou { text-align:center; margin-top:22px; font-size: 1.1em; font-weight: bold; color: #1976d2; }
     </style>
 </head>
 <body>
@@ -117,6 +119,6 @@
         <b>Total a pagar: ${{ number_format($granTotal,2) }}</b>
     </div>
 
-    <div class="section-title" style="text-align:center;margin-top:22px;">¡Gracias por su compra!</div>
+    <div class="thankyou">¡Gracias por su compra!</div>
 </body>
 </html>
